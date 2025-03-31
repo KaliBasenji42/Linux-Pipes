@@ -124,7 +124,11 @@ def getKey():
   fd = sys.stdin.fileno()
   old = termios.tcgetattr(fd) # Old terminal settings
   
-  
+  try:
+    tty.setraw(fd) # Terminal to raw (non-conical & no echo)
+    return sys.stdin.read(1) # Return char entered
+  finally:
+    termios.tcsetattr(fd, termios.TCSADRAIN, old) # Restore terminal settings
   
   
 
@@ -148,7 +152,7 @@ def render(): # Renders the Screen
   global renderHeight
   
   for i in range(renderHeight):
-    print('\033[F\033[K', end='')
+    print('\033[K\033[F', end='')
   
   # Home Screen
   
@@ -198,9 +202,13 @@ for entry in homeScreenBase: print(entry) # Print home screen base
 
 while run:
   
-  clock.tick(FPS) # FPS
+  time.sleep(1/FPS) # FPS
   
   # Detect Key
+  
+  key = getKey()
+  
+  if key.lower == 'q': run = False
   
   # Behavior
   
