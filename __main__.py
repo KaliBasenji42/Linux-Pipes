@@ -1,8 +1,9 @@
-# Imports
+### Imports ###
 
 import sys
 import os
 import random
+import time
 import termios
 import tty
 import logging
@@ -13,12 +14,12 @@ logging.basicConfig(
     filename='app.log'
 )
 
-# Variables
+### Variables ###
 
 run = True # Run Main Loop
 mode = 0 # Mode (0 = Home, 1 = Game)
-selPos = (0, 0) # Selected position
-renderHeight = 16 # Height of the render (for clearing the screen)
+selPos = (0, 0) # Selected position (x, y)
+renderHeight = 0 # Height of the render (for clearing the screen)
 
 FPS = 20 # FPS
 
@@ -54,26 +55,22 @@ homeScreenBase = [ # What to print when starting home screen
   '',
   '"WASD" to navigate',
   '"Q" & "E" to rotate pipes',
-  '"Enter" to select',
-  '"Esc" to quit',
+  '"F" to select',
+  '"X" to quit',
   '',
   'PLAY',
   '',
   'OPTIONS:',
-  'Grid Width: 10',
-  'Grid Height: 5',
-  'Sources: 3',
-  'Drains: 3',
 ]
 homeScreenSelPos = ( # Selectable positions on the home screen
-  10, # Play
+  9, # Play
   12, # Grid Width
   13, # Grid Height
   14, # Sources
   15, # Drains
 )
 
-# Classes
+### Classes ###
 
 class pipe:
   
@@ -117,7 +114,19 @@ class drain:
   
 drains = [] # List of all drains
 
-# Functions
+### Functions ###
+
+def strToPosInt(string): # Converts string to positive integer, returns 0 if no number, ignores non-numeric characters
+  
+  numStr = ''
+  
+  for i in range(len(string)):
+    if string[i].isnumeric(): numStr = numStr + string[i]
+  
+  if len(numStr) == 0: return 0
+  
+  else: return int(numStr)
+  
 
 def getKey():
   
@@ -125,14 +134,16 @@ def getKey():
   old = termios.tcgetattr(fd) # Old terminal settings
   
   try:
-    tty.setraw(fd) # Terminal to raw (non-conical & no echo)
-    return sys.stdin.read(1) # Return char entered
+    tty.setraw(sys.stdin.fileno()) # Terminal to raw (non-conical & no echo)
+    chr = sys.stdin.read(1) # Get char entered
+    return chr
   finally:
     termios.tcsetattr(fd, termios.TCSADRAIN, old) # Restore terminal settings
   
-  
 
-def generateGame(width, height, numSources, numDrains): # Builds the grid
+def generateGame(): # Builds the grid
+  
+  global options
   
   # Create Sources
   
@@ -149,7 +160,7 @@ def render(): # Renders the Screen
   
   # Clear screen
   
-  global renderHeight
+  global renderHeight, selPos, homeScreenBase, homeScreenSelPos
   
   for i in range(renderHeight):
     print('\033[K\033[F', end='')
@@ -158,22 +169,22 @@ def render(): # Renders the Screen
   
   if mode == 0:
     
-    global selPos
+    homeScreen = [] # Initiate array of strings to be printed
+    for val in homeScreenBase: homeScreen.append(val) # Add homeScreenBase
+    for key, value in options.items(): homeScreen.append(key + ': ' + str(value)) # Add Options
     
-    selPos = (0, 0) # Reset selected position
-    
-    for i in range(len(homeScreenBase)):
+    for i in range(len(homeScreen)):
       
       selected = False # Selected position
       
-      if i == homeScreenSelPos[selPos[0]]: selected = True
+      if i == homeScreenSelPos[selPos[1]]: selected = True
       
       # Highlight selected position
-      if selected: print('\033[7m' + homeScreenBase[i] + '\033[0m')
-      else: print(homeScreenBase[i])
+      if selected: print('\033[7m' + homeScreen[i] + '\033[0m')
+      else: print(homeScreen[i])
       
     
-    renderHeight = len(homeScreenBase) # Set render height
+    renderHeight = len(homeScreen) # Set render height
     
   
   # Game Screen
@@ -194,25 +205,79 @@ def render(): # Renders the Screen
     
   
 
-# Pre Loop
+### Pre Loop ###
 
-for entry in homeScreenBase: print(entry) # Print home screen base
+render() # Initial render
 
-# Main Loop
+### Main Loop ###
 
 while run:
   
-  time.sleep(1/FPS) # FPS
+  ### Time/FPS ###
   
-  # Detect Key
+  time.sleep(1/FPS)
   
-  key = getKey()
+  ### Detect Key ###
   
-  if key.lower == 'q': run = False
+  key = getKey().lower()
   
-  # Behavior
+  # Escape
   
-  # Render
+  if key == 'x' and mode == 0: run = False
+  
+  elif key == 'x' and mode == 1:
+    
+    selPos = (0, 0)
+    grid = [] # Reset Vars
+    
+    mode = 0 # Mode set to Home
+    
+  
+  # Navigation
+  
+  elif key == 'a':
+    selPos = (selPos[0] - 1, selPos[1])
+  elif key == 'd':
+    selPos = (selPos[0] + 1, selPos[1])
+  elif key == 'w':
+    selPos = (selPos[0], selPos[1] - 1)
+  elif key == 's':
+    selPos = (selPos[0], selPos[1] + 1)
+  
+  # Select
+  
+  elif key == 'f' and mode == 0:
+    if selPos[1] == 0: # Play
+      
+      selPos = (0, 0) # Reset selPos
+      
+      mode = 1 # Mode set to Game
+      
+      generateGame() # Generates Game
+      
+    elif selPos[1] == 1: # Grid Width
+      options["Grid Width"] = min(strToPosInt(input("Grid Width: ")), 100)
+      print('\033[K\033[F', end='')
+    elif selPos[1] == 2: # Grid Height
+      options["Grid Height"] = min(strToPosInt(input("Grid Height: ")), 100)
+      print('\033[K\033[F', end='')
+    elif selPos[1] == 3: # Sources
+      options["Sources"] = max(min(strToPosInt(input("Sources: ")), options["Grid Width"]), 1)
+      print('\033[K\033[F', end='')
+    elif selPos[1] == 4: # Drains
+      options["Drains"] = max(min(strToPosInt(input("Drains: ")), options["Grid Width"]), 1)
+      print('\033[K\033[F', end='')
+  
+  # Clamp selected position
+  
+  if mode == 0:
+    selPos = (0, max(min(selPos[1], len(homeScreenSelPos) - 1), 0))
+  else:
+    selPos = (max(min(selPos[0],  options["Grid Width"] - 1), 0), max(min(selPos[1],  options["Grid Height"] - 1), 0))
+  
+  ### Behavior ###
+  
+  ### Render ###
   
   render()
   
