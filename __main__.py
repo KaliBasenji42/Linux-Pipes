@@ -3,10 +3,9 @@
 import sys
 import os
 import random
-import pygame
+import termios
+import tty
 import logging
-
-pygame.init()
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -21,7 +20,6 @@ mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position
 renderHeight = 16 # Height of the render (for clearing the screen)
 
-clock = pygame.time.Clock() # Clock for FPS
 FPS = 20 # FPS
 
 options = { # Options
@@ -121,6 +119,15 @@ drains = [] # List of all drains
 
 # Functions
 
+def getKey():
+  
+  fd = sys.stdin.fileno()
+  old = termios.tcgetattr(fd) # Old terminal settings
+  
+  
+  
+  
+
 def generateGame(width, height, numSources, numDrains): # Builds the grid
   
   # Create Sources
@@ -134,7 +141,7 @@ def generateGame(width, height, numSources, numDrains): # Builds the grid
   pass
   
 
-def render(): # Renders the grid
+def render(): # Renders the Screen
   
   # Clear screen
   
@@ -193,35 +200,7 @@ while run:
   
   clock.tick(FPS) # FPS
   
-  # Events
-  
-  for event in pygame.event.get():
-    
-    if event.type == pygame.KEYDOWN:
-      
-      # Escape
-      
-      if event.key == pygame.K_ESCAPE: run = False
-      
-      # Navigation
-      
-      if event.key == pygame.K_w:
-        selPos = (selPos[0] - 1, selPos[1])
-      if event.key == pygame.K_s:
-        selPos = (selPos[0] + 1, selPos[1])
-      if event.key == pygame.K_a:
-        selPos = (selPos[0], selPos[1] - 1)
-      if event.key == pygame.K_d:
-        selPos = (selPos[0], selPos[1] + 1)
-      
-      # Clamp selected position
-      
-      if mode == 0:
-        selPos = (0, max(min(selPos[1], len(homeScreenSelPos) - 1), 0))
-      
-      logging.debug(f"Selected position: {selPos}")
-      
-    
+  # Detect Key
   
   # Behavior
   
@@ -229,5 +208,3 @@ while run:
   
   render()
   
-
-pygame.quit() # Quit pygame
