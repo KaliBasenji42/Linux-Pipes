@@ -19,9 +19,10 @@ logging.basicConfig(
 run = True # Run Main Loop
 mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position
+renderHeight = 16 # Height of the render (for clearing the screen)
 
 clock = pygame.time.Clock() # Clock for FPS
-FPS = 60 # FPS
+FPS = 20 # FPS
 
 options = { # Options
   "Grid Width": 10, # Game Grid Width
@@ -135,6 +136,13 @@ def generateGame(width, height, numSources, numDrains): # Builds the grid
 
 def render(): # Renders the grid
   
+  # Clear screen
+  
+  global renderHeight
+  
+  for i in range(renderHeight):
+    print('\033[F\033[K', end='')
+  
   # Home Screen
   
   if mode == 0:
@@ -153,6 +161,8 @@ def render(): # Renders the grid
       if selected: print('\033[7m' + homeScreenBase[i] + '\033[0m')
       else: print(homeScreenBase[i])
       
+    
+    renderHeight = len(homeScreenBase) # Set render height
     
   
   # Game Screen
@@ -208,6 +218,8 @@ while run:
       
       if mode == 0:
         selPos = (0, max(min(selPos[1], len(homeScreenSelPos) - 1), 0))
+      
+      logging.debug(f"Selected position: {selPos}")
       
     
   
