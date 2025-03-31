@@ -128,6 +128,23 @@ def strToPosInt(string): # Converts string to positive integer, returns 0 if no 
   else: return int(numStr)
   
 
+def randomExc(lo, hi, exc): # Returns a random number in range lo to hi (inclusive), excluding values in exc
+  
+  poss = [] # Possible outputs
+  
+  for i in range(lo, hi + 1):
+    
+    listed = False # Is i listed in exc
+    
+    for val in exc:
+      if i == val: listed = True
+    
+    if not listed: poss.append(i)
+    
+  
+  return poss[random.randint(0, len(poss) - 1)]
+  
+
 def getKey():
   
   fd = sys.stdin.fileno()
@@ -143,24 +160,92 @@ def getKey():
 
 def generateGame(): # Builds the grid
   
-  global options
+  global options, characters
   
   # Create Sources
   
+  taken = [] # Taken positions
+  
+  for i in range(options["Sources"]):
+    
+    pos = randomExc(0, options["Grid Width"] - 1, taken) # Rand x pos
+    
+    # Color
+    
+    color = [0, 0, 0]
+    cPos = random.randint(0, 2)
+    color[cPos] = 1 / random.randint(1, 2)
+    
+    sources.append(source(pos, color))
+    
+  
   # Create Drains
+  
+  taken = [] # Taken positions
+  
+  for i in range(options["Drains"]):
+    
+    pos = randomExc(0, options["Grid Width"] - 1, taken) # Rand x pos
+    
+    # Color
+    
+    color = [0, 0, 0]
+    srcs = [] # Associated sources, must have one, may have all
+    
+    for i in range(options["Sources"]):
+      
+      src = random.randint(0, options["Sources"] - 1) # Source index to try to add
+      
+      listed = False # Is already listed
+      
+      for val in srcs:
+        if src == val: listed = True
+      
+      if not listed: srcs.append(src)
+      
+    
+    for val in srcs:
+      
+      c = sources[val].color # Source color
+      
+      # Add
+      
+      color[0] = color[0] + c[0]
+      color[1] = color[1] + c[1]
+      color[2] = color[2] + c[2]
+      
+    
+    color[0] = min(color[0], 1) # Clamp color values
+    color[1] = min(color[1], 1)
+    color[2] = min(color[2], 1)
+    
+    drains.append(drain(pos, color))
+    
   
   # Create Paths (don't forget to randomize pipe rotations)
   
   # Fill rest with random pipes
   
-  pass
+  for i in range(options["Grid Height"]):
+    
+    row = []
+    
+    for j in range(options["Grid Width"]):
+      
+      chr = characters[random.randint(0, len(characters) - 1)]
+      
+      row.append(pipe(chr, j, i))
+      
+    
+    grid.append(row)
+    
   
 
 def render(): # Renders the Screen
   
-  # Clear screen
-  
   global renderHeight, selPos, homeScreenBase, homeScreenSelPos
+  
+  # Clear screen
   
   for i in range(renderHeight):
     print('\033[K\033[F', end='')
@@ -193,7 +278,24 @@ def render(): # Renders the Screen
     
     # Info bar
     
+    print('Info')
+    
     # Sources
+    
+    srcStr = ' ' * options["Grid Width"]
+    
+    for src in sources:
+      
+      index = src.x # Insert Index
+      c = src.color
+      
+      colorChr = "\033[38;2;" + str(int(255 * c[0])) + ';' + str(int(255 * c[2]))  + ';' + str(int(255 * c[2])) + 'm'
+      # Color escape character for the src
+      
+      srcStr[:index - 1] + colorChr + src.chr + '\033[0m' # Add color, then character, then reset
+      
+    
+    print(srcStr)
     
     # Grid
     
