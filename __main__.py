@@ -16,10 +16,12 @@ logging.basicConfig(
 
 # Variables
 
-run = False # Run Main Loop
-mspf = 50 # Milliseconds per frame
+run = True # Run Main Loop
 mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position
+
+clock = pygame.time.Clock() # Clock for FPS
+FPS = 60 # FPS
 
 options = { # Options
   "Grid Width": 10, # Game Grid Width
@@ -131,11 +133,13 @@ def generateGame(width, height, numSources, numDrains): # Builds the grid
   pass
   
 
-def render(grid, selPos): # Renders the grid
+def render(): # Renders the grid
   
   # Home Screen
   
   if mode == 0:
+    
+    global selPos
     
     selPos = (0, 0) # Reset selected position
     
@@ -177,13 +181,41 @@ for entry in homeScreenBase: print(entry) # Print home screen base
 
 while run:
   
-  # Event Handling
+  clock.tick(FPS) # FPS
   
-  # Update
+  # Events
+  
+  for event in pygame.event.get():
+    
+    if event.type == pygame.KEYDOWN:
+      
+      # Escape
+      
+      if event.key == pygame.K_ESCAPE: run = False
+      
+      # Navigation
+      
+      if event.key == pygame.K_w:
+        selPos = (selPos[0] - 1, selPos[1])
+      if event.key == pygame.K_s:
+        selPos = (selPos[0] + 1, selPos[1])
+      if event.key == pygame.K_a:
+        selPos = (selPos[0], selPos[1] - 1)
+      if event.key == pygame.K_d:
+        selPos = (selPos[0], selPos[1] + 1)
+      
+      # Clamp selected position
+      
+      if mode == 0:
+        selPos = (0, max(min(selPos[1], len(homeScreenSelPos) - 1), 0))
+      
+    
+  
+  # Behavior
   
   # Render
   
-  # Time
+  render()
   
-  pass
-  
+
+pygame.quit() # Quit pygame
