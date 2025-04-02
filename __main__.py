@@ -13,6 +13,7 @@ logging.basicConfig(
     format='%(asctime)s | %(levelname)s: %(message)s',
     filename='app.log'
 )
+logging.debug('New Run: ')
 
 ### Variables ###
 
@@ -49,9 +50,9 @@ charKey = { # Character Key: "chr": (hasTop, hasRight, hasBottom, hasLeft, "allR
 }
 
 homeScreenBase = [ # What to print when starting home screen
-  '╷   ┬ ╷ ╷ ╷ ╷ ╷ ╷   ┏━┓ ┳ ┏━┓ ┏━╸ ┏━╸',
-  '│   │ │╲│ │ │  ╳    ┣━┛ ┃ ┣━┛ ┣━╸ ┗━┓',
-  '╰─╴ ┴ ╵ ╵ ╰─╯ ╵ ╵   ╹   ┻ ╹   ┗━╸ ╺━┛',
+  '\033[31m┏━┓ \033[32m┳ \033[33m┏━┓ \033[34m┏━╸ \033[35m┏━╸',
+  '\033[31m┣━┛ \033[32m┃ \033[33m┣━┛ \033[34m┣━╸ \033[35m┗━┓',
+  '\033[31m╹   \033[32m┻ \033[33m╹   \033[34m┗━╸ \033[35m╺━┛\033[0m',
   '',
   '"WASD" to navigate',
   '"Q" & "E" to rotate pipes',
@@ -169,12 +170,15 @@ def generateGame(): # Builds the grid
   for i in range(options["Sources"]):
     
     pos = randomExc(0, options["Grid Width"] - 1, taken) # Rand x pos
+    taken.append(pos)
     
     # Color
     
     color = [0, 0, 0]
     cPos = random.randint(0, 2)
     color[cPos] = 1 / random.randint(1, 2)
+    
+    logging.debug('c: ' + str(color) + ', pos: ' + str(pos))
     
     sources.append(source(pos, color))
     
@@ -186,6 +190,7 @@ def generateGame(): # Builds the grid
   for i in range(options["Drains"]):
     
     pos = randomExc(0, options["Grid Width"] - 1, taken) # Rand x pos
+    taken.append(pos)
     
     # Color
     
@@ -249,6 +254,7 @@ def render(): # Renders the Screen
   
   for i in range(renderHeight):
     print('\033[K\033[F', end='')
+  print('\033[K', end='')
   
   # Home Screen
   
@@ -276,26 +282,40 @@ def render(): # Renders the Screen
   
   else:
     
+    renderHeight = 0 # Initial renderHeight, ++ at each print()
+    
     # Info bar
     
     print('Info')
+    renderHeight += 1
     
     # Sources
     
-    srcStr = ' ' * options["Grid Width"]
+    srcStr = ''
     
-    for src in sources:
+    for i in range(options["Grid Width"]):
       
-      index = src.x # Insert Index
-      c = src.color
+      string = ' ' # Base Case
       
-      colorChr = "\033[38;2;" + str(int(255 * c[0])) + ';' + str(int(255 * c[2]))  + ';' + str(int(255 * c[2])) + 'm'
-      # Color escape character for the src
+      for src in sources:
+        
+        if src.x != i: pass
+        
+        c = src.color
+        
+        colorChr = "\033[38;2;" + str(int(255 * c[0])) + ';' + str(int(255 * c[2]))  + ';' + str(int(255 * c[2])) + 'm'
+        # Color escape character for the src
+        
+        string = colorChr + src.chr
+        
       
-      srcStr[:index - 1] + colorChr + src.chr + '\033[0m' # Add color, then character, then reset
+      srcStr = srcStr + string
+      # Add substring
       
     
+    srcStr = srcStr + '\033[0m' # Reset color on end
     print(srcStr)
+    renderHeight += 1
     
     # Grid
     
