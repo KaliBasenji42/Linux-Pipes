@@ -81,11 +81,13 @@ class pipe:
     
     self.pos = (x, y) # Position
     self.chr = chr # Character
-    self.sources = [] # Sources the pipe is connected to
+    self.sources = set([]) # Sources the pipe is connected to
     self.color = [0, 0, 0] # Color content (based on the sources)
     
   
   def update(self):
+    
+    global unresolved
     
     # Get connected neighbors
     
@@ -96,7 +98,8 @@ class pipe:
       (self.pos[0] - 1, self.pos[1]),
     ]
     
-    nghbrs = [] # Neighbors
+    nghbrs = [] # All Neighbors
+    connected = [] # Connected Neighbors
     
     for i in range(len(nghbrsPos)):
       
@@ -109,55 +112,47 @@ class pipe:
       if nghbrsPos[i][0] >= options['Grid Width']: add = False
       if nghbrsPos[i][1] >= options['Grid Height']: add = False
       
-      # Remove unconnected
+      if add: nghbrs.append(nghbr) # Add
       
-      if not charKey[self.chr][i]: add = False
-      
-      if add: 
+      if add:
         
-        nghbr = grid[nghbrsPos[i][1]][nghbrsPos[i][0]] # Get neighbor if it exists
-        if not charKey[nghbr.chr][(i + 2) % 4]: add = False
+        addCnt = True # Add to connected
         
-        if add: nghbrs.append(nghbr) # Add
+        if not charKey[self.chr][i]: addCnt = False
+        
+        if not charKey[self.chr][i]: addCnt = False # Self not connected
+        if not charKey[nghbr.chr][(i + 2) % 4]: addCnt = False # Neighboor not connected
+        
+        if addCnt: connected.append(nghbr) # Add
         
       
     
-    # Update sources
-    
-    allSrcs = self.sources # All sources in neighbors
+    self.sources.clear()
     
     for src in sources: # From sources
       
-      if self.pos[0] == src.x and charKey[self.chr][0]:
+      if self.pos[0] == src.x and charKey[self.chr][0] and self.pos[1] == 0:
+        # Self x-pos aligns with src x-pos, self char connects upward, self y-pos is next to sources
         
-        for asrc in allSrcs:
-          
-          if src.x != asrc: allSrcs.append(src.x)
-          
+        logging.debug('Connected Source!')
         
-      
-    
-    for nghbr in nghbrs: # From neighbors
-      
-      for nsrc in nghbr.sources:
-        
-        for asrc in allSrcs:
-          
-          if nsrc != asrc: allSrcs.append(nsrc)
-          
+        self.sources.add(src.x)
         
       
     
-    self.sources = allSrcs
-    
-    # Add non-matching neighbors to unresolved
-    
-    for nghbr in nghbrs:
+    for cnt in connected: # From neighbors
+        
+      self.sources = self.sources.union(cnt.sources)
       
-      match = arraysMatch(nghbr.sources, self.sources)
+    
+    # Add non-matching neighbors to unresolved ???
+    
+    for nghbr in nghbrs: # ???
+      
+      match = nghbr.sources == self.sources
       
       if not match: unresolved.append(
-        grid[nghbr.pos[0]][nghbr.pos[1]]
+        grid[nghbr.pos[1]][nghbr.pos[0]]
       )
       
     
@@ -178,6 +173,8 @@ class pipe:
           
         
       
+    
+    self.color = c
     
     logging.debug('Sources: ' + str(self.sources))
     
@@ -284,8 +281,6 @@ def generateGame(): # Builds the grid
     cPos = random.randint(0, 2)
     color[cPos] = 1 / random.randint(1, 2)
     
-    logging.debug('c: ' + str(color) + ', pos: ' + str(pos))
-    
     sources.append(source(pos, color))
     
   
@@ -344,6 +339,7 @@ def generateGame(): # Builds the grid
     for j in range(options["Grid Width"]):
       
       chr = characters[random.randint(0, len(characters) - 1)]
+      chr = characters[0]
       
       row.append(pipe(chr, j, i))
       
@@ -395,7 +391,12 @@ def render(): # Renders the Screen
     
     # Info bar
     
-    info = 'Color: ' + str(grid[selPos[1]][selPos[0]].color)
+    pipe = grid[selPos[1]][selPos[0]]
+    
+    info = 'Color: ' + str(pipe.color) + ' ' # Add color
+    if len(pipe.sources) > 0: info = info + str(pipe.sources) # Add sources
+    else: info = info + '{}' # If no sources
+    
     print(info)
     renderHeight += 1
     
@@ -570,10 +571,14 @@ while run:
   
   ### Behavior ###
   
-  while len(unresolved) > 0: # While there are unresolved pipes
-    logging.debug('Unresolved: ' + str(unresolved[0]))
+  while True: # While there are unresolved pipes
+    
+    if len(unresolved) == 0: break # Break when empty 
+    
+    logging.debug('Unresolved: ' + str(unresolved[0].pos))
     unresolved[0].update() # Update first pipe
     unresolved.pop(0) # Remove pipe
+    
   
   ### Render ###
   
