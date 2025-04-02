@@ -84,22 +84,16 @@ class pipe:
     self.sources = set([]) # Sources the pipe is connected to
     self.color = [0, 0, 0] # Color content (based on the sources)
     
-  
-  def update(self):
-    
-    global unresolved
-    
-    # Get connected neighbors
+    # Neighbors
     
     nghbrsPos = [ # Potential neighbors' positions (clockwise/fits charKey order)
-      (self.pos[0], self.pos[1] + 1),
-      (self.pos[0] + 1, self.pos[1]),
-      (self.pos[0], self.pos[1] - 1),
-      (self.pos[0] - 1, self.pos[1]),
+      (self.pos[0], self.pos[1] - 1, 0), # X, Y, ID/index for charKey (Up, Right, Down, Left)
+      (self.pos[0] + 1, self.pos[1], 1),
+      (self.pos[0], self.pos[1] + 1, 2),
+      (self.pos[0] - 1, self.pos[1], 3),
     ]
     
-    nghbrs = [] # All Neighbors
-    connected = [] # Connected Neighbors
+    self.nghbrsPos = [] # All Neighbors
     
     for i in range(len(nghbrsPos)):
       
@@ -112,20 +106,68 @@ class pipe:
       if nghbrsPos[i][0] >= options['Grid Width']: add = False
       if nghbrsPos[i][1] >= options['Grid Height']: add = False
       
-      if add: nghbrs.append(nghbr) # Add
+      if add: self.nghbrsPos.append(nghbrsPos[i]) # Add
       
-      if add:
-        
-        addCnt = True # Add to connected
-        
-        if not charKey[self.chr][i]: addCnt = False
-        
-        if not charKey[self.chr][i]: addCnt = False # Self not connected
-        if not charKey[nghbr.chr][(i + 2) % 4]: addCnt = False # Neighboor not connected
-        
-        if addCnt: connected.append(nghbr) # Add
-        
+    
+  
+  def rotate(self, clockwise):
+    
+    global unresolved
+    
+    # Rotate
+    
+    if clockwise: self.chr = charKey[self.chr][4][1]
+    else: self.chr = charKey[self.chr][4][3]
+    
+    # Update Self
+    
+    self.update()
+    
+    # Add neighbors to unresolved
+    
+    for pos in self.nghbrsPos:
       
+      unresolved.append(
+        grid[pos[1]][pos[0]]
+      )
+      
+    
+  
+  def update(self):
+    
+    global unresolved
+    
+    # Get connected neighbors
+    
+    connected = [] # Connected Neighbors Positions
+    
+    for pos in self.nghbrsPos:
+      
+      nghbr = grid[pos[1]][pos[0]]
+      
+      addCnt = True # Add to connected
+      
+      if not charKey[self.chr][pos[2]]: addCnt = False # Self not connected
+      if not charKey[nghbr.chr][-pos[2]]: addCnt = False # Neighboor not connected
+      
+      if addCnt: connected.append(pos) # Add
+      
+    
+    # Debug
+    
+    dbgStr = 'Self: ' + str(self.pos) +  self.chr + '| Ngbrs: '
+    
+    for pos in self.nghbrsPos:
+      dbgStr = dbgStr + str(pos) + grid[pos[1]][pos[0]].chr + ', '
+    
+    dbgStr = dbgStr + '| Cnctd: '
+    
+    for pos in connected:
+      dbgStr = dbgStr + str(pos) + grid[pos[1]][pos[0]].chr + ', '
+    
+    logging.debug(dbgStr)
+    
+    # Update pipe sources
     
     self.sources.clear()
     
@@ -134,25 +176,27 @@ class pipe:
       if self.pos[0] == src.x and charKey[self.chr][0] and self.pos[1] == 0:
         # Self x-pos aligns with src x-pos, self char connects upward, self y-pos is next to sources
         
-        logging.debug('Connected Source!')
-        
         self.sources.add(src.x)
         
       
     
-    for cnt in connected: # From neighbors
-        
+    for pos in connected: # From connected
+      
+      cnt = grid[pos[1]][pos[0]]
+      
       self.sources = self.sources.union(cnt.sources)
       
     
-    # Add non-matching neighbors to unresolved ???
+    # Add non-matching connected to unresolved
     
-    for nghbr in nghbrs: # ???
+    for pos in connected:
       
-      match = nghbr.sources == self.sources
+      cnt = grid[pos[1]][pos[0]]
+      
+      match = cnt.sources == self.sources # Sources match
       
       if not match: unresolved.append(
-        grid[nghbr.pos[1]][nghbr.pos[0]]
+        grid[pos[1]][pos[0]] # Add cnt (from grid)
       )
       
     
@@ -175,8 +219,6 @@ class pipe:
       
     
     self.color = c
-    
-    logging.debug('Sources: ' + str(self.sources))
     
   
 
@@ -264,7 +306,13 @@ def getKey():
 
 def generateGame(): # Builds the grid
   
-  global options, characters
+  global options, characters, sources, drains, grid
+  
+  # Clear
+  
+  sources = []
+  drains = []
+  grid = []
   
   # Create Sources
   
@@ -339,7 +387,7 @@ def generateGame(): # Builds the grid
     for j in range(options["Grid Width"]):
       
       chr = characters[random.randint(0, len(characters) - 1)]
-      chr = characters[0]
+      # chr = characters[0] # Debug Chr
       
       row.append(pipe(chr, j, i))
       
@@ -437,10 +485,15 @@ def render(): # Renders the Screen
       
       for pipe in row:
         
-        if pipe.pos == selPos: # Selected position
-          rowStr = rowStr + '\033[7m' # Highlight selected position
+        if pipe.pos == selPos: # Highlight selected position
+          rowStr = rowStr + '\033[7m'
         
-        c = pipe.color
+        c = pipe.color # Color
+        
+        c[0] = min(c[0], 1) # Clamp
+        c[1] = min(c[1], 1)
+        c[2] = min(c[2], 1)
+        
         colorChr = '\033[38;2;' + str(int(255 * c[0])) + ';' + str(int(255 * c[1]))  + ';' + str(int(255 * c[2])) + 'm'
         if c == [0, 0, 0]: colorChr = '' # Reset color if no color
         # Color escape character for the pipe
@@ -560,13 +613,9 @@ while run:
   if mode == 1:
     
     if key == 'q': # Counter-clockwise
-      pipe = grid[selPos[1]][selPos[0]]
-      pipe.chr = charKey[pipe.chr][4][3]
-      pipe.update()
+      grid[selPos[1]][selPos[0]].rotate(False)
     elif key == 'e': # Clockwise
-      pipe = grid[selPos[1]][selPos[0]]
-      pipe.chr = charKey[pipe.chr][4][1]
-      pipe.update()
+      grid[selPos[1]][selPos[0]].rotate(True)
     
   
   ### Behavior ###
@@ -575,7 +624,7 @@ while run:
     
     if len(unresolved) == 0: break # Break when empty 
     
-    logging.debug('Unresolved: ' + str(unresolved[0].pos))
+    # logging.debug('Unresolved: ' + str(unresolved[0].pos))
     unresolved[0].update() # Update first pipe
     unresolved.pop(0) # Remove pipe
     
