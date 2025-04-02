@@ -100,9 +100,6 @@ class pipe:
     
     for i in range(len(nghbrsPos)):
       
-      nghbr = grid[nghbrsPos[i][1]][nghbrsPos[i][0]]
-      logging.debug(nghbr)
-      
       add = True # Should add
       
       # Remove out-of-bound
@@ -115,11 +112,14 @@ class pipe:
       # Remove unconnected
       
       if not charKey[self.chr][i]: add = False
-      if not charKey[nghbr.chr][i + 2 % 4]: add = False
       
-      # Add
-      
-      if add: nghbrs.append(nghbr)
+      if add: 
+        
+        nghbr = grid[nghbrsPos[i][1]][nghbrsPos[i][0]] # Get neighbor if it exists
+        if not charKey[nghbr.chr][(i + 2) % 4]: add = False
+        
+        if add: nghbrs.append(nghbr) # Add
+        
       
     
     # Update sources
@@ -178,6 +178,8 @@ class pipe:
           
         
       
+    
+    logging.debug('Sources: ' + str(self.sources))
     
   
 
@@ -479,10 +481,6 @@ def render(): # Renders the Screen
     print(drnStr)
     renderHeight += 1
     
-    # Message bar
-    
-    pass
-    
   
 
 ### Pre Loop ###
@@ -573,6 +571,7 @@ while run:
   ### Behavior ###
   
   while len(unresolved) > 0: # While there are unresolved pipes
+    logging.debug('Unresolved: ' + str(unresolved[0]))
     unresolved[0].update() # Update first pipe
     unresolved.pop(0) # Remove pipe
   
