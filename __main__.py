@@ -85,6 +85,101 @@ class pipe:
     self.color = [0, 0, 0] # Color content (based on the sources)
     
   
+  def update(self):
+    
+    # Get connected neighbors
+    
+    nghbrsPos = [ # Potential neighbors' positions (clockwise/fits charKey order)
+      (self.pos[0], self.pos[1] + 1),
+      (self.pos[0] + 1, self.pos[1]),
+      (self.pos[0], self.pos[1] - 1),
+      (self.pos[0] - 1, self.pos[1]),
+    ]
+    
+    nghbrs = [] # Neighbors
+    
+    for i in range(len(nghbrsPos)):
+      
+      nghbr = grid[nghbrsPos[i][1]][nghbrsPos[i][0]]
+      logging.debug(nghbr)
+      
+      add = True # Should add
+      
+      # Remove out-of-bound
+      
+      if nghbrsPos[i][0] < 0: add = False
+      if nghbrsPos[i][1] < 0: add = False
+      if nghbrsPos[i][0] >= options['Grid Width']: add = False
+      if nghbrsPos[i][1] >= options['Grid Height']: add = False
+      
+      # Remove unconnected
+      
+      if not charKey[self.chr][i]: add = False
+      if not charKey[nghbr.chr][i + 2 % 4]: add = False
+      
+      # Add
+      
+      if add: nghbrs.append(nghbr)
+      
+    
+    # Update sources
+    
+    allSrcs = self.sources # All sources in neighbors
+    
+    for src in sources: # From sources
+      
+      if self.pos[0] == src.x and charKey[self.chr][0]:
+        
+        for asrc in allSrcs:
+          
+          if src.x != asrc: allSrcs.append(src.x)
+          
+        
+      
+    
+    for nghbr in nghbrs: # From neighbors
+      
+      for nsrc in nghbr.sources:
+        
+        for asrc in allSrcs:
+          
+          if nsrc != asrc: allSrcs.append(nsrc)
+          
+        
+      
+    
+    self.sources = allSrcs
+    
+    # Add non-matching neighbors to unresolved
+    
+    for nghbr in nghbrs:
+      
+      match = arraysMatch(nghbr.sources, self.sources)
+      
+      if not match: unresolved.append(
+        grid[nghbr.pos[0]][nghbr.pos[1]]
+      )
+      
+    
+    # Update color
+    
+    c = [0, 0, 0]
+    
+    for src in sources:
+      
+      for srcPos in self.sources:
+        
+        if srcPos == src.x:
+          
+          for i in range(len(src.color)):
+            
+            c[i] += src.color[i]
+            
+          
+        
+      
+    
+  
 
 class source:
   
@@ -144,6 +239,15 @@ def randomExc(lo, hi, exc): # Returns a random number in range lo to hi (inclusi
     
   
   return poss[random.randint(0, len(poss) - 1)]
+  
+
+def arraysMatch(arr1, arr2):
+  
+  if len(arr1) != len(arr2): return False
+  # Different lens, return False
+    
+  return all(item in arr1 for item in arr2)
+  # Return if all items are contained in the other
   
 
 def getKey():
@@ -245,6 +349,9 @@ def generateGame(): # Builds the grid
     grid.append(row)
     
   
+  # add pipes near sources to unresolved
+  unresolved.extend(grid[0])
+  
 
 def render(): # Renders the Screen
   
@@ -286,7 +393,8 @@ def render(): # Renders the Screen
     
     # Info bar
     
-    print('Info')
+    info = 'Color: ' + str(grid[selPos[1]][selPos[0]].color)
+    print(info)
     renderHeight += 1
     
     # Sources
@@ -295,21 +403,22 @@ def render(): # Renders the Screen
     
     for i in range(options["Grid Width"]):
       
-      string = ' ' # Base Case
+      subStr = ' ' # Base Case
       
       for src in sources:
         
-        if src.x != i: pass
-        
-        c = src.color
-        
-        colorChr = "\033[38;2;" + str(int(255 * c[0])) + ';' + str(int(255 * c[2]))  + ';' + str(int(255 * c[2])) + 'm'
-        # Color escape character for the src
-        
-        string = colorChr + src.chr
+        if src.x == i:
+          
+          c = src.color
+          
+          colorChr = '\033[38;2;' + str(int(255 * c[0])) + ';' + str(int(255 * c[1]))  + ';' + str(int(255 * c[2])) + 'm'
+          # Color escape character for the src
+          
+          subStr = colorChr + src.chr
+          
         
       
-      srcStr = srcStr + string
+      srcStr = srcStr + subStr
       # Add substring
       
     
@@ -319,7 +428,56 @@ def render(): # Renders the Screen
     
     # Grid
     
+    for row in grid:
+      
+      rowStr = ''
+      
+      for pipe in row:
+        
+        if pipe.pos == selPos: # Selected position
+          rowStr = rowStr + '\033[7m' # Highlight selected position
+        
+        c = pipe.color
+        colorChr = '\033[38;2;' + str(int(255 * c[0])) + ';' + str(int(255 * c[1]))  + ';' + str(int(255 * c[2])) + 'm'
+        if c == [0, 0, 0]: colorChr = '' # Reset color if no color
+        # Color escape character for the pipe
+        
+        rowStr = rowStr + colorChr + pipe.chr + '\033[0m'
+        
+      
+      print(rowStr)
+      renderHeight += 1
+      
+    
     # Drains
+    
+    drnStr = ''
+    
+    for i in range(options["Grid Width"]):
+      
+      subStr = ' ' # Base Case
+      
+      for drn in drains:
+        
+        if drn.x == i:
+          
+          c = drn.color
+          
+          colorChr = '\033[38;2;' + str(int(255 * c[0])) + ';' + str(int(255 * c[1]))  + ';' + str(int(255 * c[2])) + 'm'
+          if c == [0, 0, 0]: colorChr = '' # Reset color if no color
+          # Color escape character for the src
+          
+          subStr = colorChr + drn.chr
+          
+        
+      
+      drnStr = drnStr + subStr
+      # Add substring
+      
+    
+    drnStr = drnStr + '\033[0m' # Reset color on end
+    print(drnStr)
+    renderHeight += 1
     
     # Message bar
     
@@ -337,7 +495,8 @@ while run:
   
   ### Time/FPS ###
   
-  time.sleep(1/FPS)
+  #time.sleep(1/FPS)
+  # Terminal blocks code, no FPS needed
   
   ### Detect Key ###
   
@@ -397,7 +556,25 @@ while run:
   else:
     selPos = (max(min(selPos[0],  options["Grid Width"] - 1), 0), max(min(selPos[1],  options["Grid Height"] - 1), 0))
   
+  # Rotate Pipe
+  
+  if mode == 1:
+    
+    if key == 'q': # Counter-clockwise
+      pipe = grid[selPos[1]][selPos[0]]
+      pipe.chr = charKey[pipe.chr][4][3]
+      pipe.update()
+    elif key == 'e': # Clockwise
+      pipe = grid[selPos[1]][selPos[0]]
+      pipe.chr = charKey[pipe.chr][4][1]
+      pipe.update()
+    
+  
   ### Behavior ###
+  
+  while len(unresolved) > 0: # While there are unresolved pipes
+    unresolved[0].update() # Update first pipe
+    unresolved.pop(0) # Remove pipe
   
   ### Render ###
   
