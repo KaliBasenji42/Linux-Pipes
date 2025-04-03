@@ -645,6 +645,8 @@ while run:
       
     elif selPos[1] == 1: # Grid Width
       options['Grid Width'] = min(strToPosInt(input('Grid Width: ')), 100)
+      options['Drains'] = min(options['Drains'], options['Grid Width']) # Re-Clamp
+      options['Sources'] = min(options['Sources'], options['Grid Width'])
       print('\033[K\033[F', end='')
     elif selPos[1] == 2: # Grid Height
       options['Grid Height'] = min(strToPosInt(input('Grid Height: ')), 100)
