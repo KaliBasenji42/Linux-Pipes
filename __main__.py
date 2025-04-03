@@ -25,28 +25,28 @@ renderHeight = 0 # Height of the render (for clearing the screen)
 FPS = 20 # FPS
 
 options = { # Options
-  "Grid Width": 10, # Game Grid Width
-  "Grid Height": 5, # Game Grid Height
-  "Sources": 3, # Number of sources
-  "Drains": 3, # Number of drains
+  'Grid Width': 10, # Game Grid Width
+  'Grid Height': 5, # Game Grid Height
+  'Sources': 3, # Number of sources
+  'Drains': 3, # Number of drains
 }
 
 grid = [] # Game Grid, containing all pipes
 unresolved = [] # Unresolved pipes (for a selective flood algorithm)
 
-characters = "━┃┏┓┗┛┣┫┳┻╋" # Characters for the pipes
+characters = '━┃┏┓┗┛┣┫┳┻╋' # Characters for the pipes
 charKey = { # Character Key: "chr": (hasTop, hasRight, hasBottom, hasLeft, "allRotations")
-  "━": (False, True, False, True, "━┃━┃"),
-  "┃": (True, False, True, False, "┃━┃━"),
-  "┏": (False, True, True, False, "┏┓┛┗"),
-  "┓": (False, False, True, True, "┓┛┗┏"),
-  "┗": (True, True, False, False, "┗┏┓┛"),
-  "┛": (True, False, False, True, "┛┗┏┓"),
-  "┣": (True, True, True, False, "┣┳┫┻"),
-  "┫": (True, False, True, True, "┫┻┣┳"),
-  "┳": (False, True, True, True, "┳┫┻┣"),
-  "┻": (True, True, False, True, "┻┣┳┫"),
-  "╋": (True, True, True, True, "╋╋╋╋"),
+  '━': (False, True, False, True, '━┃━┃'),
+  '┃': (True, False, True, False, '┃━┃━'),
+  '┏': (False, True, True, False, '┏┓┛┗'),
+  '┓': (False, False, True, True, '┓┛┗┏'),
+  '┗': (True, True, False, False, '┗┏┓┛'),
+  '┛': (True, False, False, True, '┛┗┏┓'),
+  '┣': (True, True, True, False, '┣┳┫┻'),
+  '┫': (True, False, True, True, '┫┻┣┳'),
+  '┳': (False, True, True, True, '┳┫┻┣'),
+  '┻': (True, True, False, True, '┻┣┳┫'),
+  '╋': (True, True, True, True, '╋╋╋╋'),
 }
 
 homeScreenBase = [ # What to print when starting home screen
@@ -112,30 +112,19 @@ class pipe:
   
   def rotate(self, clockwise):
     
-    global unresolved, grid
-    
     # Rotate
     
     if clockwise: self.chr = charKey[self.chr][4][1]
     else: self.chr = charKey[self.chr][4][3]
     
-    # Update Self
+    # Update Grid
     
-    self.update()
-    
-    # Add neighbors to unresolved
-    
-    for pos in self.nghbrsPos:
-      
-      unresolved.append(
-        grid[pos[1]][pos[0]]
-      )
-      
+    updateGrid()
     
   
   def update(self):
     
-    global unresolved, grid
+    global grid, sources
     
     # Get connected neighbors
     
@@ -188,7 +177,7 @@ class pipe:
     
     # Update color
     
-    c = [0, 0, 0]
+    self.color = [0, 0, 0]
     
     for src in sources:
       
@@ -198,13 +187,11 @@ class pipe:
           
           for i in range(len(src.color)):
             
-            c[i] += src.color[i]
+            self.color[i] += src.color[i]
             
           
         
       
-    
-    self.color = c
     
     # Debug
     
@@ -221,7 +208,10 @@ class pipe:
     for pos in connected:
       dbgStr = dbgStr + '\n      ' + str(pos) + grid[pos[1]][pos[0]].chr
     
-    logging.debug(dbgStr)
+    dbgStr = dbgStr + '\n  Sources: ' + str(self.sources)
+    dbgStr = dbgStr + '\n  Color: ' + str(self.color)
+    
+    #logging.debug(dbgStr)
     
   
 
@@ -234,7 +224,17 @@ class source:
     self.x = x # X position
     self.color = color # Color content
     
-    self.chr = "╻" # Character
+    self.chr = '╻' # Character
+    
+  
+  def update(self):
+    
+    global unresolved, grid
+    
+    sPipe = grid[0][self.x] # Pipe below
+    
+    if charKey[sPipe.chr][0]: # Upward connections
+      unresolved.append(grid[sPipe.pos[1]][sPipe.pos[0]]) # Add to unresolved
     
   
 sources = [] # List of all sources
@@ -249,7 +249,8 @@ class drain:
     self.demand = demand # Color demanded
     
     self.color = [0, 0, 0] # Color content
-    self.chr = "╹" # Character
+    self.chr = '╹' # Character
+    self.fulfilled = False # All demands met
     
   
 drains = [] # List of all drains
@@ -307,6 +308,21 @@ def getKey():
     termios.tcsetattr(fd, termios.TCSADRAIN, old) # Restore terminal settings
   
 
+def updateGrid():
+  
+  # Clear Pipes
+  
+  for row in grid:
+    for item in row:
+      item.sources.clear()
+      item.color = [0, 0, 0]
+  
+  # Update Sources
+  
+  for src in sources:
+    src.update()
+  
+
 def generateGame(): # Builds the grid
   
   global options, characters, sources, drains, grid
@@ -321,9 +337,9 @@ def generateGame(): # Builds the grid
   
   taken = [] # Taken positions
   
-  for i in range(options["Sources"]):
+  for i in range(options['Sources']):
     
-    pos = randomExc(0, options["Grid Width"] - 1, taken) # Rand x pos
+    pos = randomExc(0, options['Grid Width'] - 1, taken) # Rand x pos
     taken.append(pos)
     
     # Color
@@ -339,9 +355,9 @@ def generateGame(): # Builds the grid
   
   taken = [] # Taken positions
   
-  for i in range(options["Drains"]):
+  for i in range(options['Drains']):
     
-    pos = randomExc(0, options["Grid Width"] - 1, taken) # Rand x pos
+    pos = randomExc(0, options['Grid Width'] - 1, taken) # Rand x pos
     taken.append(pos)
     
     # Color
@@ -349,9 +365,9 @@ def generateGame(): # Builds the grid
     color = [0, 0, 0]
     srcs = [] # Associated sources, must have one, may have all
     
-    for i in range(options["Sources"]):
+    for i in range(options['Sources']):
       
-      src = random.randint(0, options["Sources"] - 1) # Source index to try to add
+      src = random.randint(0, options['Sources'] - 1) # Source index to try to add
       
       listed = False # Is already listed
       
@@ -383,11 +399,11 @@ def generateGame(): # Builds the grid
   
   # Fill rest with random pipes
   
-  for i in range(options["Grid Height"]):
+  for i in range(options['Grid Height']):
     
     row = []
     
-    for j in range(options["Grid Width"]):
+    for j in range(options['Grid Width']):
       
       chr = characters[random.randint(0, len(characters) - 1)]
       # chr = characters[0] # Debug Chr
@@ -404,7 +420,7 @@ def generateGame(): # Builds the grid
 
 def render(): # Renders the Screen
   
-  global renderHeight, selPos, homeScreenBase, homeScreenSelPos
+  global renderHeight, selPos, homeScreenBase, homeScreenSelPos, grid, sources, drains
   
   # Clear screen
   
@@ -455,7 +471,7 @@ def render(): # Renders the Screen
     
     srcStr = ''
     
-    for i in range(options["Grid Width"]):
+    for i in range(options['Grid Width']):
       
       subStr = ' ' # Base Case
       
@@ -511,10 +527,14 @@ def render(): # Renders the Screen
     # Drains
     
     drnStr = ''
+    drnLbl = '' # Drain label
     
-    for i in range(options["Grid Width"]):
+    for i in range(options['Grid Width']):
       
-      subStr = ' ' # Base Case
+      subStr = ' ' # Base case
+      
+      subLbl = ' ' # Label base case
+      lblIndx = 0 # Label number
       
       for drn in drains:
         
@@ -528,15 +548,46 @@ def render(): # Renders the Screen
           
           subStr = colorChr + drn.chr
           
+          lblIndx += 1 # Iterate label
+          subLbl = str(lblIndx)
+          
         
       
       drnStr = drnStr + subStr
-      # Add substring
+      drnLbl = drnLbl + subLbl
+      # Add substrings
       
     
     drnStr = drnStr + '\033[0m' # Reset color on end
     print(drnStr)
-    renderHeight += 1
+    print(subLbl)
+    renderHeight += 2
+    
+    for i in range(len(drains)):
+      
+      drn = drains[i]
+      
+      string = str(i+1) + ': [' # Start
+      
+      for j in range(len(drn.color)):
+        
+        if drn.color[j] >= drn.demand[j]: # Demand Met
+          string = string + '\033[32m' # Green
+        
+        string = string + str(drn.color[j]) + ' / ' + str(drn.demand[j]) + '\033[0m, ' # Supply / Demand
+        
+      
+      string = string = string[:-2] # Trim ', '
+      string = string + ']'
+      
+      if drn.fulfilled:
+        string = string + ' ✅' # Fulfilled
+      
+      # Print
+      
+      print(string)
+      renderHeight += 1
+      
     
   
 
@@ -590,18 +641,19 @@ while run:
       mode = 1 # Mode set to Game
       
       generateGame() # Generates Game
+      updateGrid() # Initail Update
       
     elif selPos[1] == 1: # Grid Width
-      options["Grid Width"] = min(strToPosInt(input("Grid Width: ")), 100)
+      options['Grid Width'] = min(strToPosInt(input('Grid Width: ')), 100)
       print('\033[K\033[F', end='')
     elif selPos[1] == 2: # Grid Height
-      options["Grid Height"] = min(strToPosInt(input("Grid Height: ")), 100)
+      options['Grid Height'] = min(strToPosInt(input('Grid Height: ')), 100)
       print('\033[K\033[F', end='')
     elif selPos[1] == 3: # Sources
-      options["Sources"] = max(min(strToPosInt(input("Sources: ")), options["Grid Width"]), 1)
+      options['Sources'] = max(min(strToPosInt(input('Sources: ')), options['Grid Width']), 1)
       print('\033[K\033[F', end='')
     elif selPos[1] == 4: # Drains
-      options["Drains"] = max(min(strToPosInt(input("Drains: ")), options["Grid Width"]), 1)
+      options['Drains'] = max(min(strToPosInt(input('Drains: ')), options['Grid Width']), 1)
       print('\033[K\033[F', end='')
   
   # Clamp selected position
@@ -609,7 +661,7 @@ while run:
   if mode == 0:
     selPos = (0, max(min(selPos[1], len(homeScreenSelPos) - 1), 0))
   else:
-    selPos = (max(min(selPos[0],  options["Grid Width"] - 1), 0), max(min(selPos[1],  options["Grid Height"] - 1), 0))
+    selPos = (max(min(selPos[0],  options['Grid Width'] - 1), 0), max(min(selPos[1],  options['Grid Height'] - 1), 0))
   
   # Rotate Pipe
   
@@ -627,7 +679,6 @@ while run:
     
     if len(unresolved) == 0: break # Break when empty 
     
-    # logging.debug('Unresolved: ' + str(unresolved[0].pos))
     unresolved[0].update() # Update first pipe
     unresolved.pop(0) # Remove pipe
     
