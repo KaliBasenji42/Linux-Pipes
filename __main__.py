@@ -112,7 +112,7 @@ class pipe:
   
   def rotate(self, clockwise):
     
-    global unresolved
+    global unresolved, grid
     
     # Rotate
     
@@ -135,7 +135,7 @@ class pipe:
   
   def update(self):
     
-    global unresolved
+    global unresolved, grid
     
     # Get connected neighbors
     
@@ -148,24 +148,10 @@ class pipe:
       addCnt = True # Add to connected
       
       if not charKey[self.chr][pos[2]]: addCnt = False # Self not connected
-      if not charKey[nghbr.chr][-pos[2]]: addCnt = False # Neighboor not connected
+      if not charKey[nghbr.chr][(pos[2] + 2) % 4]: addCnt = False # Neighboor not connected
       
       if addCnt: connected.append(pos) # Add
       
-    
-    # Debug
-    
-    dbgStr = 'Self: ' + str(self.pos) +  self.chr + '| Ngbrs: '
-    
-    for pos in self.nghbrsPos:
-      dbgStr = dbgStr + str(pos) + grid[pos[1]][pos[0]].chr + ', '
-    
-    dbgStr = dbgStr + '| Cnctd: '
-    
-    for pos in connected:
-      dbgStr = dbgStr + str(pos) + grid[pos[1]][pos[0]].chr + ', '
-    
-    logging.debug(dbgStr)
     
     # Update pipe sources
     
@@ -219,6 +205,23 @@ class pipe:
       
     
     self.color = c
+    
+    # Debug
+    
+    dbgStr = '\n  Self: ' + str(self.pos) +  self.chr + '\n    Ngbrs: '
+    
+    for pos in self.nghbrsPos:
+      dbgStr = (dbgStr + '\n      ' + 
+                str(pos) + grid[pos[1]][pos[0]].chr + 
+                ' SelfCnt: (' + str(pos[2]) + ') ' + str(charKey[self.chr][pos[2]]) + 
+                ' NghbrCnt: (' + str((pos[2] + 2) % 4) + ') ' + str(charKey[grid[pos[1]][pos[0]].chr][(pos[2] + 2) % 4]))
+    
+    dbgStr = dbgStr + '\n    Cnctd:'
+    
+    for pos in connected:
+      dbgStr = dbgStr + '\n      ' + str(pos) + grid[pos[1]][pos[0]].chr
+    
+    logging.debug(dbgStr)
     
   
 
