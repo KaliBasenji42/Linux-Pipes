@@ -21,6 +21,7 @@ run = True # Run Main Loop
 mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position (x, y)
 renderHeight = 0 # Height of the render (for clearing the screen)
+win = False # Win state
 
 FPS = 20 # FPS
 
@@ -257,12 +258,22 @@ class drain:
     
     global grid
     
+    # Color
+    
     self.color = [0, 0, 0]
     
-    dPipe = grid[0][self.x] # Pipe above
+    dPipe = grid[-1][self.x] # Pipe above
     
     if charKey[dPipe.chr][2]: # Downward connections
       self.color = dPipe.color
+    
+    # Fulfilled
+    
+    self.fulfilled = True
+    
+    for i in range(len(drn.color)):
+      if drn.color[i] < drn.demand[i]: # Demand not met
+        self.fulfilled = False
     
   
 drains = [] # List of all drains
@@ -360,7 +371,7 @@ def generateGame(): # Builds the grid
     cPos = random.randint(0, 2)
     color[cPos] = 1 / random.randint(1, 2)
     
-    sources.append(source(pos, color))
+    sources.append(source(pos, [0.5, 0.5, 0.5]))
     
   
   # Create Drains
@@ -475,22 +486,20 @@ def render(): # Renders the Screen
       pipe = grid[selPos[1]][selPos[0]]
       
       info = 'Color: ' + str(pipe.color) + ' ' # Add color
-      if len(pipe.sources) > 0: info = info + str(pipe.sources) # Add sources
-      else: info = info + '{}' # If no sources
       
     else:
       
+      info = '[None]' # Base case
+      
       for drn in drains:
         
-        info = '[None]' # Base case
-        
-        if drn.pos[0] == selPos[0]:
+        if drn.x == selPos[0]:
           
           info = 'Color : [' # Start
           
           for i in range(len(drn.color)):
             
-            if drn.color[i] >= drn.demand[i]: # Demand Met
+            if drn.color[i] >= drn.demand[i]: # Demand met
               info = info + '\033[32m' # Green
             
             info = info + str(drn.color[i]) + ' / ' + str(drn.demand[i]) + '\033[0m, ' # Supply / Demand
@@ -499,11 +508,15 @@ def render(): # Renders the Screen
           info = info[:-2] # Trim ', '
           info = info + ']'
           
-          if drn.fulfilled:
-            info = info + ' ✅' # Fulfilled
-          
         
       
+    
+    info = info + ' Win: '
+    
+    if win:
+      info = info + '✅🎉'
+    else:
+      info = info + '❌'
     
     print(info)
     renderHeight += 1
@@ -533,7 +546,7 @@ def render(): # Renders the Screen
       # Add substring
       
     
-    srcStr = srcStr + '\033[0m' # Reset color on end
+    srcStr = '\033[47m' + srcStr + '\033[0m' # Set background color and reset color on end
     print(srcStr)
     renderHeight += 1
     
@@ -550,14 +563,14 @@ def render(): # Renders the Screen
         
         c = pipe.color # Color
         
+        #if c == [0, 0, 0]: c = [0.75, 0.75, 0.75] # Reset color if no color
         colorChr = ('\033[38;2;' + 
                     str(int(min(255 * c[0], 255))) + ';' + 
                     str(int(min(255 * c[1], 255)))  + ';' + 
                     str(int(min(255 * c[2], 255))) + 'm')
-        if c == [0, 0, 0]: colorChr = '' # Reset color if no color
         # Color escape character for the pipe
         
-        rowStr = rowStr + colorChr + pipe.chr + '\033[0m'
+        rowStr = rowStr + '\033[47m' + colorChr + pipe.chr + '\033[0m'
         
       
       print(rowStr)
@@ -578,9 +591,15 @@ def render(): # Renders the Screen
           
           c = drn.color
           
-          colorChr = '\033[38;2;' + str(int(255 * c[0])) + ';' + str(int(255 * c[1]))  + ';' + str(int(255 * c[2])) + 'm'
-          if c == [0, 0, 0]: colorChr = '' # Reset color if no color
+          #if c == [0, 0, 0]: c = [0.75, 0.75, 0.75] # Reset color if no color
+          colorChr = ('\033[38;2;' + 
+                      str(int(min(255 * c[0], 255))) + ';' + 
+                      str(int(min(255 * c[1], 255)))  + ';' + 
+                      str(int(min(255 * c[2], 255))) + 'm')
           # Color escape character for the src
+          
+          if drn.fulfilled:
+            colorChr = colorChr + '\033[42m'
           
           subStr = colorChr + drn.chr
           
@@ -589,11 +608,10 @@ def render(): # Renders the Screen
       if i == selPos[0] and selPos[1] == options['Grid Height']: # Highlight selected position
         subStr = '\033[7m' + subStr
       
-      drnStr = drnStr + subStr
+      drnStr = drnStr + '\033[47m' + subStr  + '\033[0m'
       # Add substrings
       
     
-    drnStr = drnStr + '\033[0m' # Reset color on end
     print(drnStr)
     renderHeight += 1
     
@@ -624,6 +642,8 @@ while run:
     
     selPos = (0, 0)
     grid = [] # Reset Vars
+    sources = []
+    drains = []
     
     mode = 0 # Mode set to Home
     
@@ -691,6 +711,15 @@ while run:
     
     unresolved[0].update() # Update first pipe
     unresolved.pop(0) # Remove pipe
+    
+  
+  win = True # Initail win state
+  
+  for drn in drains: # Drains
+    
+    drn.update() # Update
+    
+    if not drn.fulfilled: win = False
     
   
   ### Render ###
