@@ -253,6 +253,18 @@ class drain:
     self.fulfilled = False # All demands met
     
   
+  def update(self):
+    
+    global grid
+    
+    self.color = [0, 0, 0]
+    
+    dPipe = grid[0][self.x] # Pipe above
+    
+    if charKey[dPipe.chr][2]: # Downward connections
+      self.color = dPipe.color
+    
+  
 drains = [] # List of all drains
 
 ### Functions ###
@@ -458,11 +470,40 @@ def render(): # Renders the Screen
     
     # Info bar
     
-    pipe = grid[selPos[1]][selPos[0]]
-    
-    info = 'Color: ' + str(pipe.color) + ' ' # Add color
-    if len(pipe.sources) > 0: info = info + str(pipe.sources) # Add sources
-    else: info = info + '{}' # If no sources
+    if selPos[1] < options['Grid Height']:
+      
+      pipe = grid[selPos[1]][selPos[0]]
+      
+      info = 'Color: ' + str(pipe.color) + ' ' # Add color
+      if len(pipe.sources) > 0: info = info + str(pipe.sources) # Add sources
+      else: info = info + '{}' # If no sources
+      
+    else:
+      
+      for drn in drains:
+        
+        info = '[None]' # Base case
+        
+        if drn.pos[0] == selPos[0]:
+          
+          info = 'Color : [' # Start
+          
+          for i in range(len(drn.color)):
+            
+            if drn.color[i] >= drn.demand[i]: # Demand Met
+              info = info + '\033[32m' # Green
+            
+            info = info + str(drn.color[i]) + ' / ' + str(drn.demand[i]) + '\033[0m, ' # Supply / Demand
+            
+          
+          info = info[:-2] # Trim ', '
+          info = info + ']'
+          
+          if drn.fulfilled:
+            info = info + ' ✅' # Fulfilled
+          
+        
+      
     
     print(info)
     renderHeight += 1
@@ -526,14 +567,10 @@ def render(): # Renders the Screen
     # Drains
     
     drnStr = ''
-    drnLbl = '' # Drain label
     
     for i in range(options['Grid Width']):
       
       subStr = ' ' # Base case
-      
-      subLbl = ' ' # Label base case
-      lblIndx = 0 # Label number
       
       for drn in drains:
         
@@ -547,46 +584,18 @@ def render(): # Renders the Screen
           
           subStr = colorChr + drn.chr
           
-          lblIndx += 1 # Iterate label
-          subLbl = str(lblIndx)
-          
         
       
+      if i == selPos[0] and selPos[1] == options['Grid Height']: # Highlight selected position
+        subStr = '\033[7m' + subStr
+      
       drnStr = drnStr + subStr
-      drnLbl = drnLbl + subLbl
       # Add substrings
       
     
     drnStr = drnStr + '\033[0m' # Reset color on end
     print(drnStr)
-    print(subLbl)
-    renderHeight += 2
-    
-    for i in range(len(drains)):
-      
-      drn = drains[i]
-      
-      string = str(i+1) + ': [' # Start
-      
-      for j in range(len(drn.color)):
-        
-        if drn.color[j] >= drn.demand[j]: # Demand Met
-          string = string + '\033[32m' # Green
-        
-        string = string + str(drn.color[j]) + ' / ' + str(drn.demand[j]) + '\033[0m, ' # Supply / Demand
-        
-      
-      string = string = string[:-2] # Trim ', '
-      string = string + ']'
-      
-      if drn.fulfilled:
-        string = string + ' ✅' # Fulfilled
-      
-      # Print
-      
-      print(string)
-      renderHeight += 1
-      
+    renderHeight += 1
     
   
 
@@ -643,12 +652,12 @@ while run:
       updateGrid() # Initail Update
       
     elif selPos[1] == 1: # Grid Width
-      options['Grid Width'] = min(strToPosInt(input('Grid Width: ')), 100)
+      options['Grid Width'] = min(strToPosInt(input('Grid Width: ')), 50)
       options['Drains'] = min(options['Drains'], options['Grid Width']) # Re-Clamp
       options['Sources'] = min(options['Sources'], options['Grid Width'])
       print('\033[K\033[F', end='')
     elif selPos[1] == 2: # Grid Height
-      options['Grid Height'] = min(strToPosInt(input('Grid Height: ')), 100)
+      options['Grid Height'] = min(strToPosInt(input('Grid Height: ')), 50)
       print('\033[K\033[F', end='')
     elif selPos[1] == 3: # Sources
       options['Sources'] = max(min(strToPosInt(input('Sources: ')), options['Grid Width']), 1)
@@ -662,11 +671,11 @@ while run:
   if mode == 0:
     selPos = (0, max(min(selPos[1], len(homeScreenSelPos) - 1), 0))
   else:
-    selPos = (max(min(selPos[0],  options['Grid Width'] - 1), 0), max(min(selPos[1],  options['Grid Height'] - 1), 0))
+    selPos = (max(min(selPos[0],  options['Grid Width'] - 1), 0), max(min(selPos[1],  options['Grid Height']), 0))
   
   # Rotate Pipe
   
-  if mode == 1:
+  if mode == 1 and selPos[1] < options['Grid Height']:
     
     if key == 'q': # Counter-clockwise
       grid[selPos[1]][selPos[0]].rotate(False)
