@@ -509,11 +509,10 @@ def render(): # Renders the Screen
         
         c = pipe.color # Color
         
-        c[0] = min(c[0], 1) # Clamp
-        c[1] = min(c[1], 1)
-        c[2] = min(c[2], 1)
-        
-        colorChr = '\033[38;2;' + str(int(255 * c[0])) + ';' + str(int(255 * c[1]))  + ';' + str(int(255 * c[2])) + 'm'
+        colorChr = ('\033[38;2;' + 
+                    str(int(min(255 * c[0], 255))) + ';' + 
+                    str(int(min(255 * c[1], 255)))  + ';' + 
+                    str(int(min(255 * c[2], 255))) + 'm')
         if c == [0, 0, 0]: colorChr = '' # Reset color if no color
         # Color escape character for the pipe
         
