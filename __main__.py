@@ -672,12 +672,12 @@ while run:
       updateGrid() # Initail Update
       
     elif selPos[1] == 1: # Grid Width
-      options['Grid Width'] = min(strToPosInt(input('Grid Width: ')), 50)
+      options['Grid Width'] = max(min(strToPosInt(input('Grid Width: ')), 50), 1)
       options['Drains'] = min(options['Drains'], options['Grid Width']) # Re-Clamp
       options['Sources'] = min(options['Sources'], options['Grid Width'])
       print('\033[K\033[F', end='')
     elif selPos[1] == 2: # Grid Height
-      options['Grid Height'] = min(strToPosInt(input('Grid Height: ')), 50)
+      options['Grid Height'] = max(min(strToPosInt(input('Grid Height: ')), 50), 1)
       print('\033[K\033[F', end='')
     elif selPos[1] == 3: # Sources
       options['Sources'] = max(min(strToPosInt(input('Sources: ')), options['Grid Width']), 1)
