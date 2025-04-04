@@ -260,7 +260,7 @@ class drain:
     
     # Color
     
-    self.color = [0, 0, 0]
+    self.color = [0.0, 0.0, 0.0]
     
     dPipe = grid[-1][self.x] # Pipe above
     
