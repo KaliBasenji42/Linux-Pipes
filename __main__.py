@@ -17,6 +17,9 @@ logging.debug('New Run: ')
 
 ### Variables ###
 
+animateResolve = False # Wether to animate resolving process
+ARSleep = 0.5 # SPF of resolve animation
+
 run = True # Run Main Loop
 mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position (x, y)
@@ -708,6 +711,10 @@ while run:
   while True: # While there are unresolved pipes
     
     if len(unresolved) == 0: break # Break when empty 
+    
+    if animateResolve: # Animation
+      render()
+      time.sleep(ARSleep)
     
     unresolved[0].update() # Update first pipe
     unresolved.pop(0) # Remove pipe
