@@ -385,7 +385,7 @@ def generateGame(): # Builds the grid
     
     # Color
     
-    color = [0, 0, 0]
+    color = [0.0, 0.0, 0.0]
     srcs = [] # Associated sources, must have one, may have all
     
     for i in range(options['Sources']):
