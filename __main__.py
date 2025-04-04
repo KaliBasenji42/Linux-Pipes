@@ -371,7 +371,7 @@ def generateGame(): # Builds the grid
     cPos = random.randint(0, 2)
     color[cPos] = 1 / random.randint(1, 2)
     
-    sources.append(source(pos, [0.5, 0.5, 0.5]))
+    sources.append(source(pos, color))
     
   
   # Create Drains
