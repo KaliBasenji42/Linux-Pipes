@@ -335,10 +335,12 @@ def getKey():
     chr = sys.stdin.read(1) # Get char entered
     logging.debug('Key Press: ' + chr + ' (arrowKey: ' + str(arrowKey) + ')') # Logging
     
-    if not arrowKey: return chr
+    shouldReturn = not arrowKey # Should it return chr?
     
     if chr[1] == '[': arrowKey = True # Next key is arrow key
     else: arrowKey = False
+    
+    if shouldReturn: return chr # Return
     
   finally:
     termios.tcsetattr(fd, termios.TCSADRAIN, old) # Restore terminal settings
