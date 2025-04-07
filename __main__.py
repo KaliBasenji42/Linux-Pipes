@@ -350,7 +350,7 @@ def getKey():
     if pastKeys[-2] != '[': shouldReturn = True
     elif pastKeys[-3] != '^[': shouldReturn = True
     
-    logging.debug('Key Press: ' + chr + ' (shouldReturn: ' + str(shouldReturn) + ')') # Logging
+    logging.debug('Key Press: ' + chr + ' (shouldReturn: ' + str(shouldReturn) + ', ' + str(pastKeys) + ')') # Logging
     
     if shouldReturn: return chr # Return
     return '' # Base case
