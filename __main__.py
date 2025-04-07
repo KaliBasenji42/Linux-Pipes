@@ -348,7 +348,7 @@ def getKey():
     
     shouldReturn = False # Should it return chr?
     if pastKeys[-2] != '[': shouldReturn = True
-    elif pastKeys[-3] != '^[': shouldReturn = True
+    elif pastKeys[-3] != '\x1b': shouldReturn = True
     
     logging.debug('Key Press: ' + chr + ' (shouldReturn: ' + str(shouldReturn) + ', ' + str(pastKeys) + ')') # Logging
     
