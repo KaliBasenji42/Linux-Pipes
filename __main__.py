@@ -215,7 +215,7 @@ class pipe:
     dbgStr = dbgStr + '\n  Sources: ' + str(self.sources)
     dbgStr = dbgStr + '\n  Color: ' + str(self.color)
     
-    #logging.debug(dbgStr)
+    logging.debug(dbgStr)
     
   
 
@@ -329,6 +329,7 @@ def getKey():
   try:
     tty.setraw(sys.stdin.fileno()) # Terminal to raw (non-conical & no echo)
     chr = sys.stdin.read(1) # Get char entered
+    logging.debug('Key Press: ' + chr) # Logging
     return chr
   finally:
     termios.tcsetattr(fd, termios.TCSADRAIN, old) # Restore terminal settings
