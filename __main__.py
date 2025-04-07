@@ -25,6 +25,7 @@ mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position (x, y)
 renderHeight = 0 # Height of the render (for clearing the screen)
 win = False # Win state
+pastKeys = [''] * 4 # To detect if a key was an arrow/escape key, and sould not be returned
 
 FPS = 20 # FPS
 
@@ -321,7 +322,19 @@ def arraysMatch(arr1, arr2):
   # Return if all items are contained in the other
   
 
+def roll(arr, new): # Have an array roll in a new value, removing the first
+  
+  out = arr
+  
+  out.append(new) # Add new
+  out.pop[0] # Remove first
+  
+  return out
+  
+
 def getKey():
+  
+  global pastKeys
   
   fd = sys.stdin.fileno()
   old = termios.tcgetattr(fd) # Old terminal settings
@@ -330,11 +343,14 @@ def getKey():
     tty.setraw(sys.stdin.fileno()) # Terminal to raw (non-conical & no echo)
     
     chr = sys.stdin.read(1) # Get char entered
-    chr2 = sys.stdin.read(2)
-    chr3 = sys.stdin.read(3)
-    logging.debug('Key Press: ' + chr + ', ' + chr2 + ', ' + chr3) # Logging
     
-    shouldReturn = True
+    pastKeys = roll(pastKeys, chr) # Roll chr into pastKeys
+    
+    shouldReturn = False # Should it return chr?
+    if pastKeys[-2] != '[': shouldReturn = True
+    elif pastKeys[-3] != '^[': shouldReturn = True
+    
+    logging.debug('Key Press: ' + chr + ' (shouldReturn: ' + str(shouldReturn) + ')') # Logging
     
     if shouldReturn: return chr # Return
     return '' # Base case
