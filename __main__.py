@@ -333,7 +333,7 @@ def getKey():
     tty.setraw(sys.stdin.fileno()) # Terminal to raw (non-conical & no echo)
     
     chr = sys.stdin.read(1) # Get char entered
-    logging.debug('Key Press: ' + chr) # Logging
+    logging.debug('Key Press: ' + chr + ' (arrowKey: ' + str(arrowKey) + ')') # Logging
     
     if not arrowKey: return chr
     
