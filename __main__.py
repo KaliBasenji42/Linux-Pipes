@@ -330,7 +330,7 @@ def getKey():
     tty.setraw(sys.stdin.fileno()) # Terminal to raw (non-conical & no echo)
     chr = sys.stdin.read(1) # Get char entered
     logging.debug('Key Press: ' + chr) # Logging
-    logging.debug('sys.stdin: ' + sys.stdin.readlines[]) # Logging
+    logging.debug('sys.stdin: ' + str(sys.stdin.readlines[])) # Logging
     return chr
   finally:
     termios.tcsetattr(fd, termios.TCSADRAIN, old) # Restore terminal settings
