@@ -337,7 +337,7 @@ def getKey():
     
     shouldReturn = not arrowKey # Should it return chr?
     
-    if chr[1] == '[': arrowKey = True # Next key is arrow key
+    if chr == '[': arrowKey = True # Next key is arrow key
     else: arrowKey = False
     
     if shouldReturn: return chr # Return
