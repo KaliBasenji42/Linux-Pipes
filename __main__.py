@@ -25,6 +25,7 @@ mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position (x, y)
 renderHeight = 0 # Height of the render (for clearing the screen)
 win = False # Win state
+arrowKey = False # If the key detected is detecting an escape key for arrow keys (so it will ignore them)
 
 FPS = 20 # FPS
 
@@ -323,15 +324,22 @@ def arraysMatch(arr1, arr2):
 
 def getKey():
   
+  global arrowKey
+  
   fd = sys.stdin.fileno()
   old = termios.tcgetattr(fd) # Old terminal settings
   
   try:
     tty.setraw(sys.stdin.fileno()) # Terminal to raw (non-conical & no echo)
+    
     chr = sys.stdin.read(1) # Get char entered
     logging.debug('Key Press: ' + chr) # Logging
-    logging.debug('sys.stdin: ' + str(sys.stdin.readlines())) # Logging
-    return chr
+    
+    if not arrowKey return chr
+    
+    if chr == '[': arrowKey = True # Next key is arrow key
+    else: arrowKey = False
+    
   finally:
     termios.tcsetattr(fd, termios.TCSADRAIN, old) # Restore terminal settings
   
