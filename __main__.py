@@ -335,7 +335,7 @@ def getKey():
     chr = sys.stdin.read(1) # Get char entered
     logging.debug('Key Press: ' + chr) # Logging
     
-    if not arrowKey return chr
+    if not arrowKey: return chr
     
     if chr == '[': arrowKey = True # Next key is arrow key
     else: arrowKey = False
