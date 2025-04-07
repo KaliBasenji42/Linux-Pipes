@@ -63,6 +63,7 @@ homeScreenBase = [ # What to print when starting home screen
   '"Q" & "E" to rotate pipes',
   '"F" to select',
   '"X" to quit',
+  'When editing option, type number, then press [Enter] to set',
   '',
   'PLAY',
   '',
