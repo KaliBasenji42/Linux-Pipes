@@ -341,6 +341,7 @@ def getKey():
     else: arrowKey = False
     
     if shouldReturn: return chr # Return
+    return '' # Base case
     
   finally:
     termios.tcsetattr(fd, termios.TCSADRAIN, old) # Restore terminal settings
