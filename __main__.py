@@ -88,7 +88,7 @@ class pipe:
     self.pos = (x, y) # Position
     self.chr = chr # Character
     self.sources = set([]) # Sources the pipe is connected to
-    self.color = [0, 0, 0] # Color content (based on the sources)
+    self.color = [0.0, 0.0, 0.0] # Color content (based on the sources)
     
     # Neighbors
     
@@ -183,7 +183,7 @@ class pipe:
     
     # Update color
     
-    self.color = [0, 0, 0]
+    self.color = [0.0, 0.0, 0.0]
     
     for src in sources:
       
@@ -254,7 +254,7 @@ class drain:
     self.x = x # X position
     self.demand = demand # Color demanded
     
-    self.color = [0, 0, 0] # Color content
+    self.color = [0.0, 0.0, 0.0] # Color content
     self.chr = '╹' # Character
     self.fulfilled = False # All demands met
     
@@ -265,7 +265,7 @@ class drain:
     
     # Color
     
-    self.color = [0, 0, 0]
+    self.color = [0.0, 0.0, 0.0]
     
     dPipe = grid[-1][self.x] # Pipe above
     
@@ -367,7 +367,7 @@ def updateGrid():
   for row in grid:
     for item in row:
       item.sources.clear()
-      item.color = [0, 0, 0]
+      item.color = [0.0, 0.0, 0.0]
   
   # Update Sources
   
@@ -396,7 +396,7 @@ def generateGame(): # Builds the grid
     
     # Color
     
-    color = [0, 0, 0]
+    color = [0.0, 0.0, 0.0]
     cPos = random.randint(0, 2)
     color[cPos] = 1 / random.randint(1, 2)
     
@@ -414,7 +414,7 @@ def generateGame(): # Builds the grid
     
     # Color
     
-    color = [0, 0, 0]
+    color = [0.0, 0.0, 0.0]
     srcs = [] # Associated sources, must have one, may have all
     
     for i in range(options['Sources']):
@@ -440,9 +440,9 @@ def generateGame(): # Builds the grid
       color[2] = color[2] + c[2]
       
     
-    color[0] = min(color[0], 1) # Clamp color values
-    color[1] = min(color[1], 1)
-    color[2] = min(color[2], 1)
+    color[0] = min(color[0], 1.0) # Clamp color values
+    color[1] = min(color[1], 1.0)
+    color[2] = min(color[2], 1.0)
     
     drains.append(drain(pos, color))
     
@@ -477,8 +477,11 @@ def render(): # Renders the Screen
   # Clear screen
   
   for i in range(renderHeight):
-    print('\033[K\033[F', end='')
-  print('\033[K', end='')
+    
+    if mode == 1: print('\033[F', end='') # Up one (do not clear/prevent flashing)
+    else: print('\033[K\033[F', end='') # Clear row, up 1 row
+    
+  print('\033[K', end='') # Last row
   
   # Home Screen
   
@@ -576,7 +579,7 @@ def render(): # Renders the Screen
       
     
     srcStr = '\033[47m' + srcStr + '\033[0m' # Set background color and reset color on end
-    print(srcStr)
+    print(srcStr + '  ')
     renderHeight += 1
     
     # Grid
@@ -592,7 +595,6 @@ def render(): # Renders the Screen
         
         c = pipe.color # Color
         
-        #if c == [0, 0, 0]: c = [0.75, 0.75, 0.75] # Reset color if no color
         colorChr = ('\033[38;2;' + 
                     str(int(min(255 * c[0], 255))) + ';' + 
                     str(int(min(255 * c[1], 255)))  + ';' + 
@@ -602,7 +604,7 @@ def render(): # Renders the Screen
         rowStr = rowStr + '\033[47m' + colorChr + pipe.chr + '\033[0m'
         
       
-      print(rowStr)
+      print(rowStr + '  ')
       renderHeight += 1
       
     
@@ -620,7 +622,6 @@ def render(): # Renders the Screen
           
           c = drn.color
           
-          #if c == [0, 0, 0]: c = [0.75, 0.75, 0.75] # Reset color if no color
           colorChr = ('\033[38;2;' + 
                       str(int(min(255 * c[0], 255))) + ';' + 
                       str(int(min(255 * c[1], 255)))  + ';' + 
@@ -641,7 +642,7 @@ def render(): # Renders the Screen
       # Add substrings
       
     
-    print(drnStr)
+    print(drnStr + '  ')
     renderHeight += 1
     
   
@@ -653,11 +654,6 @@ render() # Initial render
 ### Main Loop ###
 
 while run:
-  
-  ### Time/FPS ###
-  
-  #time.sleep(1/FPS)
-  # Terminal blocks code, no FPS needed
   
   ### Detect Key ###
   
@@ -699,6 +695,11 @@ while run:
       
       generateGame() # Generates Game
       updateGrid() # Initail Update
+      
+      for i in range(renderHeight):
+        print('\033[K\033[F', end='') # Clear Row
+      for i in range(renderHeight):
+        print('') # Back to end
       
     elif selPos[1] == 1: # Grid Width
       options['Grid Width'] = max(min(strToPosInt(input('Grid Width: ')), 50), 1)
