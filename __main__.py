@@ -334,6 +334,8 @@ def getKey():
     chr3 = sys.stdin.read(3)
     logging.debug('Key Press: ' + chr + ', ' + chr2 + ', ' + chr3) # Logging
     
+    shouldReturn = True
+    
     if shouldReturn: return chr # Return
     return '' # Base case
     
