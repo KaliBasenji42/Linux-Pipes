@@ -1,0 +1,11 @@
+2025-04-07 12:35:33,267 | DEBUG: New Run: 
+2025-04-07 12:35:33,857 | DEBUG: Key Press: s (shouldReturn: True, ['', '', '', 's'])
+2025-04-07 12:35:34,060 | DEBUG: Key Press: s (shouldReturn: True, ['', '', 's', 's'])
+2025-04-07 12:35:34,199 | DEBUG: Key Press: s (shouldReturn: True, ['', 's', 's', 's'])
+2025-04-07 12:35:34,342 | DEBUG: Key Press: s (shouldReturn: True, ['s', 's', 's', 's'])
+2025-04-07 12:35:34,480 | DEBUG: Key Press: s (shouldReturn: True, ['s', 's', 's', 's'])
+2025-04-07 12:35:34,874 | DEBUG: Key Press: w (shouldReturn: True, ['s', 's', 's', 'w'])
+2025-04-07 12:35:35,001 | DEBUG: Key Press: w (shouldReturn: True, ['s', 's', 'w', 'w'])
+2025-04-07 12:35:35,137 | DEBUG: Key Press: w (shouldReturn: True, ['s', 'w', 'w', 'w'])
+2025-04-07 12:35:35,276 | DEBUG: Key Press: w (shouldReturn: True, ['w', 'w', 'w', 'w'])
+2025-04-07 12:35:35,409 | DEBUG: Key Press: w (shouldReturn: True, ['w', 'w', 'w', 'w'])

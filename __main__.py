@@ -70,11 +70,11 @@ homeScreenBase = [ # What to print when starting home screen
   'OPTIONS:',
 ]
 homeScreenSelPos = ( # Selectable positions on the home screen
-  9, # Play
-  12, # Grid Width
-  13, # Grid Height
-  14, # Sources
-  15, # Drains
+  10, # Play
+  13, # Grid Width
+  14, # Grid Height
+  15, # Sources
+  16, # Drains
 )
 
 ### Classes ###
