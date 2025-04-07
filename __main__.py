@@ -25,7 +25,6 @@ mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position (x, y)
 renderHeight = 0 # Height of the render (for clearing the screen)
 win = False # Win state
-arrowKey = False # If the key detected is detecting an escape key for arrow keys (so it will ignore them)
 
 FPS = 20 # FPS
 
@@ -324,8 +323,6 @@ def arraysMatch(arr1, arr2):
 
 def getKey():
   
-  global arrowKey
-  
   fd = sys.stdin.fileno()
   old = termios.tcgetattr(fd) # Old terminal settings
   
@@ -333,12 +330,9 @@ def getKey():
     tty.setraw(sys.stdin.fileno()) # Terminal to raw (non-conical & no echo)
     
     chr = sys.stdin.read(1) # Get char entered
-    logging.debug('Key Press: ' + chr + ' (arrowKey: ' + str(arrowKey) + ')') # Logging
-    
-    shouldReturn = not arrowKey # Should it return chr?
-    
-    if chr == '[': arrowKey = True # Next key is arrow key
-    else: arrowKey = False
+    chr2 = sys.stdin.read(2)
+    chr3 = sys.stdin.read(3)
+    logging.debug('Key Press: ' + chr + ', ' + chr2 + ', ' + chr3) # Logging
     
     if shouldReturn: return chr # Return
     return '' # Base case
