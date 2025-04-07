@@ -327,7 +327,7 @@ def roll(arr, new): # Have an array roll in a new value, removing the first
   out = arr
   
   out.append(new) # Add new
-  out.pop[0] # Remove first
+  out.pop(0) # Remove first
   
   return out
   
