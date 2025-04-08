@@ -459,11 +459,13 @@ def generateGame(): # Builds the grid
       # Between 1 and the larger of Grid Width or Grid Height * 2, divided by 10, clamped to a min of 1
       
       points = [(drn.x, options['Grid Height'] - 1)]
-      # List of points to pass through
+      # List of points to pass through, first point at Drain
       
-      for i in range(numRandPnts):
-        points.append(random.randint(0, options['Grid Width'] - 1), 
-                          random.randint(0, options['Grid Height'] -1))
+      for i in range(numRandPnts): # Random mid points
+        points.append((random.randint(0, options['Grid Width'] - 1), 
+                       random.randint(0, options['Grid Height'] -1)))
+      
+      points.append((sources[src].x, 0)) # Last point at Source
       
     
   
