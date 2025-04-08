@@ -247,12 +247,13 @@ sources = [] # List of all sources
 
 class drain:
   
-  def __init__(self, x, demand):
+  def __init__(self, x, demand, srcs):
     
     # Variables
     
     self.x = x # X position
     self.demand = demand # Color demanded
+    self.srcs = srcs # Sources (for generation only) (listed as index not x pos)
     
     self.color = [0.0, 0.0, 0.0] # Color content
     self.chr = '╹' # Character
@@ -440,10 +441,31 @@ def generateGame(): # Builds the grid
       color[2] = color[2] + c[2]
       
     
-    drains.append(drain(pos, color))
+    drains.append(drain(pos, color, srcs))
     
   
   # Create Paths (don't forget to randomize pipe rotations)
+  
+  gridPaths = [[[False] * 4] * options['Grid Width']] * options['Grid Height']
+  # Grid with an array for each pipe, where each value represents wether a connection is needed on that side
+  # Same order as usual (Top, Right, Bottom, Left)
+  
+  for drn in drains:
+    
+    for src in drn.srcs:
+      
+      numRandPnts = random.randint(1, int(max(min(options['Grid Width'], options['Grid Height'] * 2) / 10, 1)))
+      # Number of random mid points to pass through
+      # Between 1 and the larger of Grid Width or Grid Height * 2, divided by 10, clamped to a min of 1
+      
+      points = [(drn.x, options['Grid Height'] - 1)]
+      # List of points to pass through
+      
+      for i in range(numRandPnts):
+        points.append(random.randint(0, options['Grid Width'] - 1), 
+                          random.randint(0, options['Grid Height'] -1))
+      
+    
   
   # Fill rest with random pipes
   
@@ -703,7 +725,7 @@ while run:
       options['Sources'] = min(options['Sources'], options['Grid Width'])
       print('\033[K\033[F', end='')
     elif selPos[1] == 2: # Grid Height
-      options['Grid Height'] = max(min(strToPosInt(input('Grid Height: ')), 50), 1)
+      options['Grid Height'] = max(min(strToPosInt(input('Grid Height: ')), 20), 1)
       print('\033[K\033[F', end='')
     elif selPos[1] == 3: # Sources
       options['Sources'] = max(min(strToPosInt(input('Sources: ')), options['Grid Width']), 1)
