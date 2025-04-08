@@ -201,7 +201,7 @@ class pipe:
     
     # Debug
     
-    dbgStr = '\n  Self: ' + str(self.pos) +  self.chr + '\n    Ngbrs: '
+    dbgStr = 'Pipe:\n  Self: ' + str(self.pos) +  self.chr + '\n    Ngbrs: '
     
     for pos in self.nghbrsPos:
       dbgStr = (dbgStr + '\n      ' + 
@@ -458,16 +458,70 @@ def generateGame(): # Builds the grid
       # Number of random mid points to pass through
       # Between 1 and the larger of Grid Width or Grid Height * 2, divided by 10, clamped to a min of 1
       
+      logging.debug(numRandPnts)
+      
       points = [(drn.x, options['Grid Height'] - 1)]
       # List of points to pass through, first point at Drain
       
       for i in range(numRandPnts): # Random mid points
         points.append((random.randint(0, options['Grid Width'] - 1), 
-                       random.randint(0, options['Grid Height'] -1)))
+                       random.randint(0, options['Grid Height'] - 1)))
       
       points.append((sources[src].x, 0)) # Last point at Source
       
+      for i in range(len(points) - 2): # For each point except last
+        
+        pnt = points[i] # Current point
+        pntN = points[i+1] # Next point
+        
+        approachXFirst = bool(random.randint(0,1))
+        # Wether to approach x pos first, else y pos
+        
+        dispX = pnt[0] - pntN[0] # Displacement X
+        dispY = pnt[1] - pntN[1] # Displacement Y
+        
+        if dispX == 0: gridPaths[pnt[1]][pnt[0]][0] = True # Connect Up
+        elif dispX < 0: gridPaths[pnt[1]][pnt[0]][3] = True # Connect Left
+        elif dispX > 0: gridPaths[pnt[1]][pnt[0]][1] = True # Connect Right
+        
+      
     
+  
+  DBStr = 'Paths:' # Debug string
+  
+  for row in gridPaths:
+    
+    rowStr = '\n  :' # Row in string
+    
+    for list in row:
+      
+      chr = '?' # Charcater
+      
+      for key in charKey:
+        
+        match = True # If the character matches the list
+        
+        for i in range(len(list)):
+          if list[i] != charKey[key][i]: match = False # Does not match
+        
+        if match: chr = key # Set
+        
+      
+      if list == [False] * 4: chr = ' ' # Empty
+      
+      # Singles
+      elif list == [True, False, False, False]: chr = '╹'
+      elif list == [False, True, False, False]: chr = '╺'
+      elif list == [False, False, True, False]: chr = '╻'
+      elif list == [False, False, False, True]: chr = '╸'
+      
+      rowStr = rowStr + chr # Add to row
+      
+    
+    DBStr = DBStr + rowStr # Add to DBStr
+    
+  
+  logging.debug(DBStr) # Log
   
   # Fill rest with random pipes
   
