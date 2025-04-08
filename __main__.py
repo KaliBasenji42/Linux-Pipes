@@ -440,10 +440,6 @@ def generateGame(): # Builds the grid
       color[2] = color[2] + c[2]
       
     
-    color[0] = min(color[0], 1.0) # Clamp color values
-    color[1] = min(color[1], 1.0)
-    color[2] = min(color[2], 1.0)
-    
     drains.append(drain(pos, color))
     
   
