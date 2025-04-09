@@ -451,7 +451,23 @@ def generateGame(): # Builds the grid
     drains.append(drain(pos, color, srcs))
     
   
-  # Create Paths (don't forget to randomize pipe rotations)
+  # Fill with random pipes
+  
+  for i in range(options['Grid Height']):
+    
+    row = []
+    
+    for j in range(options['Grid Width']):
+      
+      chr = characters[random.randint(0, len(characters) - 1)]
+      
+      row.append(pipe(chr, j, i))
+      
+    
+    grid.append(row)
+    
+  
+  # Create paths
   
   gridPaths = [[[False] * 4 for _ in range(options['Grid Width'])] for _ in range(options['Grid Height'])]
   # Grid with an array for each pipe, where each value represents wether a connection is needed on that side
@@ -486,12 +502,15 @@ def generateGame(): # Builds the grid
         
         crnt = pnt # Current point
         
+        DBStr = 'Point Gen:\n  ' # Debug string
+        DBStr = DBStr + 'pnt: ' + str(pnt) + ' pntN (Next Point): ' + str(pntN)
+        
         while True: # While crnt is not pntN
           
-          dispX = crnt[0] - pntN[0] # Displacement X
-          dispY = crnt[1] - pntN[1] # Displacement Y
+          dispX = pntN[0] - crnt[0] # Displacement X
+          dispY = pntN[1] - crnt[1] # Displacement Y
           
-          if (dispX + dispY) == (0, 0): break # Exit if crnt == pntN
+          if (dispX, dispY) == (0, 0): break # Exit if crnt == pntN
           
           chance = abs(dispX) / (abs(dispX) + abs(dispY)) # Chance to choose to move target horz. (not vert.)
           
@@ -509,11 +528,12 @@ def generateGame(): # Builds the grid
           
           trgt = (int(crnt[0] + mvDisp[0]), int(crnt[1] + mvDisp[1])) # Target point
           
-          DBStr = 'crnt: ' + str(crnt) + ' ' + str(side)
+          # Debug
+          DBStr = DBStr + '\n  '
+          DBStr = DBStr + 'mvHorz: ' + str(chance * 100) + '% ' + str(mvHorz)
+          DBStr = DBStr + ' | disp: ' + str((dispX, dispY)) + ' mv: ' + str(mvDisp)
+          DBStr = DBStr + ' | crnt: ' + str(crnt) + ' ' + str(side)
           DBStr = DBStr + ' | trgt: ' + str(trgt) + ' ' + str((side + 2) % 4)
-          DBStr = DBStr + ' | Disp: ' + str((dispX), (dispY)) + ' mv: ' + str(mvDisp)
-          # Debug String
-          logging.debug(DBStr) # Log
           
           gridPaths[crnt[1]][crnt[0]][side] = True # Set crnt pipe side to true
           gridPaths[trgt[1]][trgt[0]][(side + 2) % 4] = True # Set trgt pipe side to true
@@ -521,18 +541,24 @@ def generateGame(): # Builds the grid
           crnt = trgt # Move crnt to trgt
           
         
+        logging.debug(DBStr)
+        
       
     
   
-  # Debug
+  # Debug & Set
   
   DBStr = 'Paths:' # Debug string
   
-  for row in gridPaths:
+  for i in range(len(gridPaths)):
+    
+    row = gridPaths[i]
     
     rowStr = '\n  :' # Row in string
     
-    for list in row:
+    for j in range(len(row)):
+      
+      list = row[j]
       
       chr = '?' # Charcater
       
@@ -548,13 +574,12 @@ def generateGame(): # Builds the grid
       
       if list == [False] * 4: chr = ' ' # Empty
       
-      # Singles
-      elif list == [True, False, False, False]: chr = '╹'
-      elif list == [False, True, False, False]: chr = '╺'
-      elif list == [False, False, True, False]: chr = '╻'
-      elif list == [False, False, False, True]: chr = '╸'
-      
       rowStr = rowStr + chr # Add to row
+      
+      # Set character
+      
+      if chr != '?' and chr != ' ':
+        grid[i][j] = pipe(chr, j, i)
       
     
     DBStr = DBStr + rowStr # Add to DBStr
@@ -573,23 +598,6 @@ def generateGame(): # Builds the grid
     
   
   logging.debug(DBStr) # Log
-  
-  # Fill rest with random pipes
-  
-  for i in range(options['Grid Height']):
-    
-    row = []
-    
-    for j in range(options['Grid Width']):
-      
-      chr = characters[random.randint(0, len(characters) - 1)]
-      # chr = characters[0] # Debug Chr
-      
-      row.append(pipe(chr, j, i))
-      
-    
-    grid.append(row)
-    
   
   # add pipes near sources to unresolved
   unresolved.extend(grid[0])
