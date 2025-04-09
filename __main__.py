@@ -77,6 +77,13 @@ homeScreenSelPos = ( # Selectable positions on the home screen
   16, # Drains
 )
 
+velKey = [ # Key for Top-Right-Bottom-Left to displacment
+  (0, -1),
+  (1, 0),
+  (0, 1),
+  (-1, 0),
+]
+
 ### Classes ###
 
 class pipe:
@@ -315,7 +322,7 @@ def randomExc(lo, hi, exc): # Returns a random number in range lo to hi (inclusi
   return poss[random.randint(0, len(poss) - 1)]
   
 
-def arraysMatch(arr1, arr2):
+def arraysMatch(arr1, arr2): # Check if arrays match, order does not matter
   
   if len(arr1) != len(arr2): return False
   # Different lens, return False
@@ -484,20 +491,34 @@ def generateGame(): # Builds the grid
           dispX = crnt[0] - pntN[0] # Displacement X
           dispY = crnt[1] - pntN[1] # Displacement Y
           
-          if (dispX + dispY): break # Exit if crnt == pntN
+          if (dispX + dispY) == (0, 0): break # Exit if crnt == pntN
           
-          chance = dispX / (dispX + dispY) # Chance to choose to move target horz. (not vert.)
+          chance = abs(dispX) / (abs(dispX) + abs(dispY)) # Chance to choose to move target horz. (not vert.)
           
           mvHorz = random.random() <= chance # To move target horz. (not vert.)
           
           mvDisp = (0, 0) # Displacement/Move
           
-          if mvHorz: mvDisp
+          if mvHorz: mvDisp = (dispX / abs(dispX), 0) # Horz
+          else: mvDisp = (0, dispY / abs(dispY)) # Vert
           
-          trg = crnt # Target point
+          side = 0 # Side of the pipe to set to True
           
-          if drctn: trg[]
+          for v in range(len(velKey)): # Use velKey to find side based on mvDisp
+            if velKey[v] == mvDisp: side = v
           
+          trgt = (int(crnt[0] + mvDisp[0]), int(crnt[1] + mvDisp[1])) # Target point
+          
+          DBStr = 'crnt: ' + str(crnt) + ' ' + str(side)
+          DBStr = DBStr + ' | trgt: ' + str(trgt) + ' ' + str((side + 2) % 4)
+          DBStr = DBStr + ' | Disp: ' + str((dispX), (dispY)) + ' mv: ' + str(mvDisp)
+          # Debug String
+          logging.debug(DBStr) # Log
+          
+          gridPaths[crnt[1]][crnt[0]][side] = True # Set crnt pipe side to true
+          gridPaths[trgt[1]][trgt[0]][(side + 2) % 4] = True # Set trgt pipe side to true
+          
+          crnt = trgt # Move crnt to trgt
           
         
       
@@ -753,114 +774,123 @@ def render(): # Renders the Screen
 
 ### Pre Loop ###
 
-render() # Initial render
+try: render() # Initial render
+except Exception as e: 
+  logging.exception(e)
+  print('\033[97;41mFatal Error\033[0m')
 
 ### Main Loop ###
 
-while run:
+try: 
   
-  ### Detect Key ###
-  
-  key = getKey().lower()
-  
-  # Escape
-  
-  if key == 'x' and mode == 0: run = False
-  
-  elif key == 'x' and mode == 1:
+  while run:
     
-    selPos = (0, 0)
-    grid = [] # Reset Vars
-    sources = []
-    drains = []
+    ### Detect Key ###
     
-    mode = 0 # Mode set to Home
+    key = getKey().lower()
     
-  
-  # Navigation
-  
-  elif key == 'a':
-    selPos = (selPos[0] - 1, selPos[1])
-  elif key == 'd':
-    selPos = (selPos[0] + 1, selPos[1])
-  elif key == 'w':
-    selPos = (selPos[0], selPos[1] - 1)
-  elif key == 's':
-    selPos = (selPos[0], selPos[1] + 1)
-  
-  # Select
-  
-  elif key == 'f' and mode == 0:
-    if selPos[1] == 0: # Play
+    # Escape
+    
+    if key == 'x' and mode == 0: run = False
+    
+    elif key == 'x' and mode == 1:
       
-      selPos = (0, 0) # Reset selPos
+      selPos = (0, 0)
+      grid = [] # Reset Vars
+      sources = []
+      drains = []
       
-      mode = 1 # Mode set to Game
+      mode = 0 # Mode set to Home
       
-      generateGame() # Generates Game
-      updateGrid() # Initail Update
+    
+    # Navigation
+    
+    elif key == 'a':
+      selPos = (selPos[0] - 1, selPos[1])
+    elif key == 'd':
+      selPos = (selPos[0] + 1, selPos[1])
+    elif key == 'w':
+      selPos = (selPos[0], selPos[1] - 1)
+    elif key == 's':
+      selPos = (selPos[0], selPos[1] + 1)
+    
+    # Select
+    
+    elif key == 'f' and mode == 0:
+      if selPos[1] == 0: # Play
+        
+        selPos = (0, 0) # Reset selPos
+        
+        mode = 1 # Mode set to Game
+        
+        generateGame() # Generates Game
+        updateGrid() # Initail Update
+        
+        for i in range(renderHeight):
+          print('\033[K\033[F', end='') # Clear Row
+        for i in range(renderHeight):
+          print('') # Back to end
+        
+      elif selPos[1] == 1: # Grid Width
+        options['Grid Width'] = max(min(strToPosInt(input('Grid Width: ')), 50), 1)
+        options['Drains'] = min(options['Drains'], options['Grid Width']) # Re-Clamp
+        options['Sources'] = min(options['Sources'], options['Grid Width'])
+        print('\033[K\033[F', end='')
+      elif selPos[1] == 2: # Grid Height
+        options['Grid Height'] = max(min(strToPosInt(input('Grid Height: ')), 20), 1)
+        print('\033[K\033[F', end='')
+      elif selPos[1] == 3: # Sources
+        options['Sources'] = max(min(strToPosInt(input('Sources: ')), options['Grid Width']), 1)
+        print('\033[K\033[F', end='')
+      elif selPos[1] == 4: # Drains
+        options['Drains'] = max(min(strToPosInt(input('Drains: ')), options['Grid Width']), 1)
+        print('\033[K\033[F', end='')
+    
+    # Clamp selected position
+    
+    if mode == 0:
+      selPos = (0, max(min(selPos[1], len(homeScreenSelPos) - 1), 0))
+    else:
+      selPos = (max(min(selPos[0],  options['Grid Width'] - 1), 0), max(min(selPos[1],  options['Grid Height']), 0))
+    
+    # Rotate Pipe
+    
+    if mode == 1 and selPos[1] < options['Grid Height']:
       
-      for i in range(renderHeight):
-        print('\033[K\033[F', end='') # Clear Row
-      for i in range(renderHeight):
-        print('') # Back to end
+      if key == 'q': # Counter-clockwise
+        grid[selPos[1]][selPos[0]].rotate(False)
+      elif key == 'e': # Clockwise
+        grid[selPos[1]][selPos[0]].rotate(True)
       
-    elif selPos[1] == 1: # Grid Width
-      options['Grid Width'] = max(min(strToPosInt(input('Grid Width: ')), 50), 1)
-      options['Drains'] = min(options['Drains'], options['Grid Width']) # Re-Clamp
-      options['Sources'] = min(options['Sources'], options['Grid Width'])
-      print('\033[K\033[F', end='')
-    elif selPos[1] == 2: # Grid Height
-      options['Grid Height'] = max(min(strToPosInt(input('Grid Height: ')), 20), 1)
-      print('\033[K\033[F', end='')
-    elif selPos[1] == 3: # Sources
-      options['Sources'] = max(min(strToPosInt(input('Sources: ')), options['Grid Width']), 1)
-      print('\033[K\033[F', end='')
-    elif selPos[1] == 4: # Drains
-      options['Drains'] = max(min(strToPosInt(input('Drains: ')), options['Grid Width']), 1)
-      print('\033[K\033[F', end='')
-  
-  # Clamp selected position
-  
-  if mode == 0:
-    selPos = (0, max(min(selPos[1], len(homeScreenSelPos) - 1), 0))
-  else:
-    selPos = (max(min(selPos[0],  options['Grid Width'] - 1), 0), max(min(selPos[1],  options['Grid Height']), 0))
-  
-  # Rotate Pipe
-  
-  if mode == 1 and selPos[1] < options['Grid Height']:
     
-    if key == 'q': # Counter-clockwise
-      grid[selPos[1]][selPos[0]].rotate(False)
-    elif key == 'e': # Clockwise
-      grid[selPos[1]][selPos[0]].rotate(True)
+    ### Behavior ###
     
-  
-  ### Behavior ###
-  
-  while True: # While there are unresolved pipes
+    while True: # While there are unresolved pipes
+      
+      if len(unresolved) == 0: break # Break when empty 
+      
+      if animateResolve: # Animation
+        render()
+        time.sleep(ARSleep)
+      
+      unresolved[0].update() # Update first pipe
+      unresolved.pop(0) # Remove pipe
+      
     
-    if len(unresolved) == 0: break # Break when empty 
+    win = True # Initail win state
     
-    if animateResolve: # Animation
-      render()
-      time.sleep(ARSleep)
+    for drn in drains: # Drains
+      
+      drn.update() # Update
+      
+      if not drn.fulfilled: win = False
+      
     
-    unresolved[0].update() # Update first pipe
-    unresolved.pop(0) # Remove pipe
+    ### Render ###
     
-  
-  win = True # Initail win state
-  
-  for drn in drains: # Drains
+    render()
     
-    drn.update() # Update
-    
-    if not drn.fulfilled: win = False
-    
-  
-  ### Render ###
-  
-  render()
-  
+
+except Exception as e:
+  logging.exception(e)
+  print('\033[97;41mFatal Error\033[0m')
