@@ -477,14 +477,28 @@ def generateGame(): # Builds the grid
         pnt = points[i] # Current point
         pntN = points[i+1] # Next point
         
-        approachXFirst = bool(random.randint(0,1))
-        # Wether to approach x pos first, else y pos
+        crnt = pnt # Current point
         
-        dispX = pnt[0] - pntN[0] # Displacement X
-        dispY = pnt[1] - pntN[1] # Displacement Y
-        
-        if dispY < 0: gridPaths[pnt[1]][pnt[0]][2] = True # Connect Bottom
-        elif dispY > 0: gridPaths[pnt[1]][pnt[0]][0] = True # Connect Up
+        while True: # While crnt is not pntN
+          
+          dispX = crnt[0] - pntN[0] # Displacement X
+          dispY = crnt[1] - pntN[1] # Displacement Y
+          
+          if (dispX + dispY): break # Exit if crnt == pntN
+          
+          chance = dispX / (dispX + dispY) # Chance to choose to move target horz. (not vert.)
+          
+          mvHorz = random.random() <= chance # To move target horz. (not vert.)
+          
+          mvDisp = (0, 0) # Displacement/Move
+          
+          if mvHorz: mvDisp
+          
+          trg = crnt # Target point
+          
+          if drctn: trg[]
+          
+          
         
       
     
