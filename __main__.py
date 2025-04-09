@@ -9,7 +9,7 @@ import tty
 import logging
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.ERROR,
     format='%(asctime)s | %(levelname)s: %(message)s',
     filename='app.log'
 )
