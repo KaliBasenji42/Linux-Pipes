@@ -9,7 +9,7 @@ import tty
 import logging
 
 logging.basicConfig(
-    level=logging.ERROR,
+    level=logging.DEBUG,
     format='%(asctime)s | %(levelname)s: %(message)s',
     filename='app.log'
 )
@@ -446,7 +446,7 @@ def generateGame(): # Builds the grid
   
   # Create Paths (don't forget to randomize pipe rotations)
   
-  gridPaths = [[[False] * 4] * options['Grid Width']] * options['Grid Height']
+  gridPaths = [[[False] * 4 for _ in range(options['Grid Width'])] for _ in range(options['Grid Height'])]
   # Grid with an array for each pipe, where each value represents wether a connection is needed on that side
   # Same order as usual (Top, Right, Bottom, Left)
   
@@ -458,8 +458,6 @@ def generateGame(): # Builds the grid
       # Number of random mid points to pass through
       # Between 1 and the larger of Grid Width or Grid Height * 2, divided by 10, clamped to a min of 1
       
-      logging.debug(numRandPnts)
-      
       points = [(drn.x, options['Grid Height'] - 1)]
       # List of points to pass through, first point at Drain
       
@@ -469,7 +467,12 @@ def generateGame(): # Builds the grid
       
       points.append((sources[src].x, 0)) # Last point at Source
       
-      for i in range(len(points) - 2): # For each point except last
+      gridPaths[points[0][1]][points[0][0]][2] = True # Connect first to drain
+      gridPaths[points[-1][1]][points[-1][0]][0] = True # Connect last to source
+      
+      logging.debug('Points: ' + str(points)) # Log points
+      
+      for i in range(len(points) - 1): # For each point except last
         
         pnt = points[i] # Current point
         pntN = points[i+1] # Next point
@@ -480,12 +483,13 @@ def generateGame(): # Builds the grid
         dispX = pnt[0] - pntN[0] # Displacement X
         dispY = pnt[1] - pntN[1] # Displacement Y
         
-        if dispX == 0: gridPaths[pnt[1]][pnt[0]][0] = True # Connect Up
-        elif dispX < 0: gridPaths[pnt[1]][pnt[0]][3] = True # Connect Left
-        elif dispX > 0: gridPaths[pnt[1]][pnt[0]][1] = True # Connect Right
+        if dispY < 0: gridPaths[pnt[1]][pnt[0]][2] = True # Connect Bottom
+        elif dispY > 0: gridPaths[pnt[1]][pnt[0]][0] = True # Connect Up
         
       
     
+  
+  # Debug
   
   DBStr = 'Paths:' # Debug string
   
@@ -519,6 +523,18 @@ def generateGame(): # Builds the grid
       
     
     DBStr = DBStr + rowStr # Add to DBStr
+    
+  
+  logging.debug(DBStr) # Log
+  
+  # Debug Raw
+  
+  DBStr = 'Paths Raw:'
+  
+  for row in gridPaths:
+    
+    # Row in string
+    DBStr = DBStr + '\n  ' + str(row)
     
   
   logging.debug(DBStr) # Log
