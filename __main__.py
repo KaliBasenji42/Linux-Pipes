@@ -835,7 +835,7 @@ try:
           
           input('\nPress Enter to Exit') # Input Stop
           
-          for i in range(len(lines)): # Clear
+          for i in range(len(lines) + 2): # Clear
             print('\033[K\033[F', end='')
           print('\033[K', end='')
           
