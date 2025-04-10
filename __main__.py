@@ -24,8 +24,15 @@ run = True # Run Main Loop
 mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position (x, y)
 renderHeight = 0 # Height of the render (for clearing the screen)
-win = False # Win state
 pastKeys = [''] * 4 # To detect if a key was an arrow/escape key, and sould not be returned
+
+recordPath = 'record.txt' # Record file path
+win = False # Win state
+usedPipes = 0 # Total number of used pipes
+moves = 0 # Total number of moves
+
+grid = [] # Game Grid, containing all pipes
+unresolved = [] # Unresolved pipes (for a selective flood algorithm)
 
 options = { # Options
   'Grid Width': 10, # Game Grid Width
@@ -33,9 +40,6 @@ options = { # Options
   'Sources': 3, # Number of sources
   'Drains': 3, # Number of drains
 }
-
-grid = [] # Game Grid, containing all pipes
-unresolved = [] # Unresolved pipes (for a selective flood algorithm)
 
 characters = '━┃┏┓┗┛┣┫┳┻╋' # Characters for the pipes
 charKey = { # Character Key: "chr": (hasTop, hasRight, hasBottom, hasLeft, "allRotations")
@@ -61,6 +65,7 @@ homeScreenBase = [ # What to print when starting home screen
   '"Q" & "E" to rotate pipes',
   '"F" to select',
   '"X" to quit',
+  '"R" to show record'
   'When editing option, type number, then press [Enter] to set',
   '',
   'PLAY',
@@ -68,11 +73,11 @@ homeScreenBase = [ # What to print when starting home screen
   'OPTIONS:',
 ]
 homeScreenSelPos = ( # Selectable positions on the home screen
-  10, # Play
-  13, # Grid Width
-  14, # Grid Height
-  15, # Sources
-  16, # Drains
+  len(homeScreenBase) - 3, # Play
+  len(homeScreenBase),     # Grid Width
+  len(homeScreenBase) + 1, # Grid Height
+  len(homeScreenBase) + 2, # Sources
+  len(homeScreenBase) + 3, # Drains
 )
 
 velKey = ( # Key for Top-Right-Bottom-Left to displacment
