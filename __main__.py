@@ -18,7 +18,7 @@ logging.debug('New Run: ')
 ### Variables ###
 
 animateResolve = False # Wether to animate resolving process
-ARSleep = 0.5 # SPF of resolve animation
+ARSleep = 0.1 # SPF of resolve animation
 
 run = True # Run Main Loop
 mode = 0 # Mode (0 = Home, 1 = Game)
@@ -26,8 +26,6 @@ selPos = (0, 0) # Selected position (x, y)
 renderHeight = 0 # Height of the render (for clearing the screen)
 win = False # Win state
 pastKeys = [''] * 4 # To detect if a key was an arrow/escape key, and sould not be returned
-
-FPS = 20 # FPS
 
 options = { # Options
   'Grid Width': 10, # Game Grid Width
@@ -77,12 +75,12 @@ homeScreenSelPos = ( # Selectable positions on the home screen
   16, # Drains
 )
 
-velKey = [ # Key for Top-Right-Bottom-Left to displacment
+velKey = ( # Key for Top-Right-Bottom-Left to displacment
   (0, -1),
   (1, 0),
   (0, 1),
   (-1, 0),
-]
+)
 
 ### Classes ###
 
@@ -451,22 +449,6 @@ def generateGame(): # Builds the grid
     drains.append(drain(pos, color, srcs))
     
   
-  # Fill with random pipes
-  
-  for i in range(options['Grid Height']):
-    
-    row = []
-    
-    for j in range(options['Grid Width']):
-      
-      chr = characters[random.randint(0, len(characters) - 1)]
-      
-      row.append(pipe(chr, j, i))
-      
-    
-    grid.append(row)
-    
-  
   # Create paths
   
   gridPaths = [[[False] * 4 for _ in range(options['Grid Width'])] for _ in range(options['Grid Height'])]
@@ -550,13 +532,15 @@ def generateGame(): # Builds the grid
   
   DBStr = 'Paths:' # Debug string
   
-  for i in range(len(gridPaths)):
+  for i in range(options['Grid Height']):
     
     row = gridPaths[i]
     
     rowStr = '\n  :' # Row in string
     
-    for j in range(len(row)):
+    gridRow = [] # Grid row
+    
+    for j in range(options['Grid Width']):
       
       list = row[j]
       
@@ -566,8 +550,8 @@ def generateGame(): # Builds the grid
         
         match = True # If the character matches the list
         
-        for i in range(len(list)):
-          if list[i] != charKey[key][i]: match = False # Does not match
+        for k in range(len(list)):
+          if list[k] != charKey[key][k]: match = False # Does not match
         
         if match: chr = key # Set
         
@@ -578,11 +562,17 @@ def generateGame(): # Builds the grid
       
       # Set character
       
-      if chr != '?' and chr != ' ':
-        grid[i][j] = pipe(chr, j, i)
+      if chr != '?' and chr != ' ': # Path
+        chr = charKey[chr][4][random.randint(0,3)]
+        gridRow.append(pipe(chr, j, i))
+      else: # Random
+        chr = characters[random.randint(0, len(characters) - 1)]
+        gridRow.append(pipe(chr, j, i))
       
     
     DBStr = DBStr + rowStr # Add to DBStr
+    
+    grid.append(gridRow) # Add row to grid
     
   
   logging.debug(DBStr) # Log
