@@ -676,9 +676,9 @@ def render(): # Renders the Screen
     info = info + '\nWin: '
     
     if win:
-      info = info + '✅:D'
+      info = info + '✅ :D'
     else:
-      info = info + '❌:/'
+      info = info + '❌ :/'
     
     info = info + ' | Pipes Used: ' + str(usedPipes)
     info = info + ' | Moves: ' + str(moves)
@@ -781,6 +781,19 @@ def render(): # Renders the Screen
     
   
 
+def record(pipes, moves, time): # Record high score
+  
+  with open(recordPath, 'w') as file:
+    
+    lines = file.readlines()
+    
+    matchLine = -1 # Line of matching options, creates one if == -1
+    
+    for i in range(len(lines)):
+      pass # WIP
+    
+  
+
 ### Pre Loop ###
 
 try: render() # Initial render
@@ -793,10 +806,6 @@ except Exception as e:
 try: 
   
   while run:
-    
-    ### Record ###
-    
-    endTime = time.perf_counter()
     
     ### Detect Key ###
     
@@ -944,6 +953,14 @@ try:
     for row in grid:
       for p in row:
         if p.color != [0.0, 0.0, 0.0]: usedPipes += 1
+    
+    ### Record ###
+    
+    endTime = time.perf_counter()
+    
+    if win: 
+      try: record(usedPipes, moves, endTime - startTime)
+      except Exception as e: logging.exception(e)
     
     ### Render ###
     
