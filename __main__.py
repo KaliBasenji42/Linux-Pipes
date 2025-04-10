@@ -1,7 +1,6 @@
 ### Imports ###
 
 import sys
-import os
 import random
 import time
 import termios
@@ -21,7 +20,7 @@ animateResolve = False # Wether to animate resolving process
 ARSleep = 0.1 # SPF of resolve animation
 
 run = True # Run Main Loop
-mode = 0 # Mode (0 = Home, 1 = Game)
+mode = 0 # Mode (0 = Home, 1 = Game, 2 = Show Record)
 selPos = (0, 0) # Selected position (x, y)
 renderHeight = 0 # Height of the render (for clearing the screen)
 pastKeys = [''] * 4 # To detect if a key was an arrow/escape key, and sould not be returned
@@ -30,6 +29,8 @@ recordPath = 'record.txt' # Record file path
 win = False # Win state
 usedPipes = 0 # Total number of used pipes
 moves = 0 # Total number of moves
+startTime = 0 # Time at game start (seconds)
+endTime = 0 # Time at game end (seconds)
 
 grid = [] # Game Grid, containing all pipes
 unresolved = [] # Unresolved pipes (for a selective flood algorithm)
@@ -65,7 +66,7 @@ homeScreenBase = [ # What to print when starting home screen
   '"Q" & "E" to rotate pipes',
   '"F" to select',
   '"X" to quit',
-  '"R" to show record'
+  '"R" to show record',
   'When editing option, type number, then press [Enter] to set',
   '',
   'PLAY',
@@ -609,7 +610,8 @@ def render(): # Renders the Screen
     if mode == 1: print('\033[F', end='') # Up one (do not clear/prevent flashing)
     else: print('\033[K\033[F', end='') # Clear row, up 1 row
     
-  print('\033[K', end='') # Last row
+    if i >= renderHeight - 2: print('\033[K', end='') # Clear info bar
+    
   
   # Home Screen
   
@@ -671,15 +673,19 @@ def render(): # Renders the Screen
         
       
     
-    info = info + ' Win: '
+    info = info + '\nWin: '
     
     if win:
-      info = info + '✅🎉'
+      info = info + '✅:D'
     else:
-      info = info + '❌'
+      info = info + '❌:/'
+    
+    info = info + ' | Pipes Used: ' + str(usedPipes)
+    info = info + ' | Moves: ' + str(moves)
+    info = info + ' | Time: ' + str(round(endTime - startTime, 2)) + 's'
     
     print(info)
-    renderHeight += 1
+    renderHeight += 2
     
     # Sources
     
@@ -788,6 +794,10 @@ try:
   
   while run:
     
+    ### Record ###
+    
+    endTime = time.perf_counter()
+    
     ### Detect Key ###
     
     key = getKey().lower()
@@ -804,6 +814,37 @@ try:
       drains = []
       
       mode = 0 # Mode set to Home
+      
+    
+    # Record
+    
+    elif key == 'r' and mode == 0:
+      
+      try:
+        
+        with open(recordPath, 'r') as file:
+          
+          lines = file.readlines()
+          
+          for i in range(renderHeight): # Clear
+            print('\033[K\033[F', end='')
+          print('\033[K', end='')
+          
+          for line in lines: # Print file
+            print(line, end='')
+          
+          input('\nPress Enter to Exit') # Input Stop
+          
+          for i in range(len(lines) + 1): # Clear
+            print('\033[K\033[F', end='')
+          print('\033[K', end='')
+          
+          for i in range(renderHeight): # Reprint for Render
+            print(i)
+          
+        
+      except Exception as e:
+        logging.exception(e)
       
     
     # Navigation
@@ -823,6 +864,11 @@ try:
       if selPos[1] == 0: # Play
         
         selPos = (0, 0) # Reset selPos
+        
+        usedPipes = 0 # Reset record values
+        moves = 0
+        startTime = time.perf_counter()
+        endTime = time.perf_counter()
         
         mode = 1 # Mode set to Game
         
@@ -862,8 +908,10 @@ try:
       
       if key == 'q': # Counter-clockwise
         grid[selPos[1]][selPos[0]].rotate(False)
+        moves += 1
       elif key == 'e': # Clockwise
         grid[selPos[1]][selPos[0]].rotate(True)
+        moves += 1
       
     
     ### Behavior ###
@@ -888,6 +936,14 @@ try:
       
       if not drn.fulfilled: win = False
       
+    
+    # Update usedPipes
+    
+    usedPipes = 0
+    
+    for row in grid:
+      for p in row:
+        if p.color != [0.0, 0.0, 0.0]: usedPipes += 1
     
     ### Render ###
     
