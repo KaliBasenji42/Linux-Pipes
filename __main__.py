@@ -647,7 +647,7 @@ def render(): # Renders the Screen
       
       pipe = grid[selPos[1]][selPos[0]]
       
-      info = 'Color: ' + str(pipe.color) + ' ' # Add color
+      info = 'Color: rgb' + str(pipe.color) + ' ' # Add color
       
     else:
       
@@ -657,7 +657,7 @@ def render(): # Renders the Screen
         
         if drn.x == selPos[0]:
           
-          info = 'Color : [' # Start
+          info = 'Color: rgb[' # Start
           
           for i in range(len(drn.color)):
             
@@ -748,7 +748,7 @@ def render(): # Renders the Screen
     
     for i in range(options['Grid Width']):
       
-      subStr = ' ' # Base case
+      subStr = '\033[30m ' # Base case
       
       for drn in drains:
         
