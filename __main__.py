@@ -802,8 +802,9 @@ def record(pipes, moves, time): # Record high score
   lines = [] # Content of file (clear and before writing)
   
   matchLine = -1 # Line of matching options, creates one if == -1
-  
   optionsLine = '' # What the options line should match/be created as
+  
+  time = round(time, 2)
   
   # Read file as array of lines
   with open(recordPath, 'r') as file: lines = file.readlines()
@@ -821,7 +822,7 @@ def record(pipes, moves, time): # Record high score
     lines.append(optionsLine)
     lines.append('  Least Pipes: ' + str(pipes) + '\n')
     lines.append('  Least Moves: ' + str(moves) + '\n')
-    lines.append('  Best Time: ' + str(time) + '\n')
+    lines.append('  Best Time: ' + str(time) + 's\n')
   
   else: # Overwrite exsisting with best value
     
@@ -832,7 +833,7 @@ def record(pipes, moves, time): # Record high score
     lines[matchLine + 2] = '  Least Moves: ' + str(best) + '\n'
     
     best = min(time, strToFloat(lines[matchLine + 3]))
-    lines[matchLine + 3] = '  Best Time: ' + str(best) + '\n'
+    lines[matchLine + 3] = '  Best Time: ' + str(best) + 's\n'
     
   
   # Write to file
