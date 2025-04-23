@@ -20,7 +20,7 @@ animateResolve = False # Wether to animate resolving process
 ARSleep = 0.1 # SPF of resolve animation
 
 run = True # Run Main Loop
-mode = 0 # Mode (0 = Home, 1 = Game, 2 = Show Record)
+mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position (x, y)
 renderHeight = 0 # Height of the render (for clearing the screen)
 pastKeys = [''] * 4 # To detect if a key was an arrow/escape key, and sould not be returned
@@ -307,6 +307,22 @@ def strToPosInt(string): # Converts string to positive integer, returns 0 if no 
   if len(numStr) == 0: return 0
   
   else: return int(numStr)
+  
+
+def strToFloat(string): # Converts string to float, returns 0 if no number, ignores non-numeric characters
+  
+  numStr = ''
+  
+  for i in range(len(string)):
+    
+    if string[i].isnumeric(): numStr = numStr + string[i]
+    if string[i] == '.': numStr = numStr + string[i]
+    
+  
+  if len(numStr) == 0: return 0
+  
+  if string[0] == '-': return -1 * float(numStr)
+  else: return float(numStr)
   
 
 def randomExc(lo, hi, exc): # Returns a random number in range lo to hi (inclusive), excluding values in exc
@@ -783,15 +799,54 @@ def render(): # Renders the Screen
 
 def record(pipes, moves, time): # Record high score
   
-  with open(recordPath, 'w') as file:
+  lines = [] # Content of file (clear and before writing)
+  
+  matchLine = -1 # Line of matching options, creates one if == -1
+  
+  optionsLine = '' # What the options line should match/be created as
+  
+  # Read file as array of lines
+  with open(recordPath, 'r') as file: lines = file.readlines()
+  
+  for key in options: # Make options line (iterate through options)
+    optionsLine = optionsLine + key + ': ' + str(options[key]) + ', '
+  
+  optionsLine = optionsLine[:-2] # Trim ', '
+  optionsLine = optionsLine + '\n' # Ending '\n'
+  
+  for i in range(len(lines)): # Try to find optionsLine
+    if lines[i] == optionsLine: matchLine = i
+  
+  if matchLine == -1: # Create new entry
+    lines.append(optionsLine)
+    lines.append('  Least Pipes: ' + str(pipes) + '\n')
+    lines.append('  Least Moves: ' + str(moves) + '\n')
+    lines.append('  Best Time: ' + str(time) + '\n')
+  
+  else: # Overwrite exsisting with best value
     
-    lines = file.readlines()
+    best = min(pipes, strToPosInt(lines[matchLine + 1]))
+    lines[matchLine + 1] = '  Least Pipes: ' + str(best) + '\n'
     
-    matchLine = -1 # Line of matching options, creates one if == -1
+    best = min(moves, strToPosInt(lines[matchLine + 2]))
+    lines[matchLine + 2] = '  Least Moves: ' + str(best) + '\n'
     
-    for i in range(len(lines)):
-      pass # WIP
+    best = min(time, strToFloat(lines[matchLine + 3]))
+    lines[matchLine + 3] = '  Best Time: ' + str(best) + '\n'
     
+  
+  # Write to file
+  with open(recordPath, 'w') as file: file.writelines(lines)
+  
+  # Logging
+  
+  DBStr = 'Record:\n  optionsLine: ' + optionsLine
+  DBStr = DBStr + '  matchLine: ' + str(matchLine)
+  DBStr = DBStr + '\n  Pipes: ' + str(pipes) + ', Moves: ' + str(moves) + ', Time: ' + str(time)
+  DBStr = DBStr + '\n  File:\n' + str(lines)
+  
+  logging.debug(DBStr)
+  
   
 
 ### Pre Loop ###
@@ -835,21 +890,16 @@ try:
           
           lines = file.readlines()
           
-          for i in range(renderHeight): # Clear
-            print('\033[K\033[F', end='')
-          print('\033[K', end='')
+          print('\nRecord:\n')
           
           for line in lines: # Print file
-            print(line, end='')
+            print(line.replace('\n', ''))
           
           input('\nPress Enter to Exit') # Input Stop
           
-          for i in range(len(lines) + 2): # Clear
+          for i in range(len(lines) + 5): # Clear
             print('\033[K\033[F', end='')
           print('\033[K', end='')
-          
-          for i in range(renderHeight): # Reprint for Render
-            print(i)
           
         
       except Exception as e:
@@ -958,7 +1008,7 @@ try:
     
     endTime = time.perf_counter()
     
-    if win: 
+    if win and mode == 1:
       try: record(usedPipes, moves, endTime - startTime)
       except Exception as e: logging.exception(e)
     
