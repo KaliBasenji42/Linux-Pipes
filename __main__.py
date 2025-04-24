@@ -850,7 +850,7 @@ def record(pipes, moves, time): # Record high score
   
   
 
-### Pre Loop ###
+### Pre-Loop ###
 
 try: render() # Initial render
 except Exception as e: 
