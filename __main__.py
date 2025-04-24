@@ -16,8 +16,8 @@ logging.debug('New Run: ')
 
 ### Variables ###
 
-animateResolve = False # Wether to animate resolving process
-ARSleep = 0.1 # SPF of resolve animation
+animateResolve = False # Wether to animate resolving process (Debug)
+ARSleep = 0.1 # SPF of resolve animation (Debug)
 
 run = True # Run Main Loop
 mode = 0 # Mode (0 = Home, 1 = Game)
@@ -550,9 +550,9 @@ def generateGame(): # Builds the grid
       
     
   
-  # Debug & Set
+  # Info & Set
   
-  DBStr = 'Paths:' # Debug string
+  infoStr = 'Paths:' # Info string
   
   for i in range(options['Grid Height']):
     
@@ -592,12 +592,12 @@ def generateGame(): # Builds the grid
         gridRow.append(pipe(chr, j, i))
       
     
-    DBStr = DBStr + rowStr # Add to DBStr
+    infoStr = infoStr + rowStr # Add to DBStr
     
     grid.append(gridRow) # Add row to grid
     
   
-  logging.debug(DBStr) # Log
+  logging.info(infoStr) # Log
   
   # Debug Raw
   
