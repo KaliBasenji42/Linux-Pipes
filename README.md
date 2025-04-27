@@ -1,6 +1,6 @@
 # General
 
-Pipe connect game made for Linux terminal, uses Python.
+Pipe connect game made for Linux terminal, uses Python. It run cd into the repo folder and run `python ./` or `python3 ./` (run __main__.py).
 
 ## Screenshots
 ### Home Screen
