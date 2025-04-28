@@ -1,6 +1,6 @@
 # General
 
-Pipe connect game made for Linux terminal, uses Python. To run it: cd into the repo folder and run `python ./` or `python3 ./` (run __main__.py).
+Pipe connect game made for Linux terminal, uses Python. To run it: `cd` into the repo folder and run `python ./` or `python3 ./` (run \_\_main\_\_.py). Note: It will need read-write privileges to record.txt in order for the record feature to work (it will log a non-fatal error otherwise).
 
 ## Screenshots
 ### Home Screen
