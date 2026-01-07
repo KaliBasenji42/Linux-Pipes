@@ -8,9 +8,9 @@ import tty
 import logging
 
 logging.basicConfig(
-    level=logging.ERROR,
-    format='%(asctime)s | %(levelname)s: %(message)s',
-    filename='app.log'
+  level=logging.ERROR,
+  format='%(asctime)s | %(levelname)s: %(message)s',
+  filename='app.log'
 )
 logging.debug('New Run: ')
 
@@ -23,7 +23,7 @@ run = True # Run Main Loop
 mode = 0 # Mode (0 = Home, 1 = Game)
 selPos = (0, 0) # Selected position (x, y)
 renderHeight = 0 # Height of the render (for clearing the screen)
-pastKeys = [''] * 4 # To detect if a key was an arrow/escape key, and sould not be returned
+pastKeys = [''] * 4 # To detect if a key was an arrow/escape key, and should not be returned
 
 recordPath = 'record.txt' # Record file path
 win = False # Win state
@@ -81,7 +81,7 @@ homeScreenSelPos = ( # Selectable positions on the home screen
   len(homeScreenBase) + 3, # Drains
 )
 
-velKey = ( # Key for Top-Right-Bottom-Left to displacment
+velKey = ( # Key for Top-Right-Bottom-Left to displacement
   (0, -1),
   (1, 0),
   (0, 1),
@@ -566,7 +566,7 @@ def generateGame(): # Builds the grid
       
       list = row[j]
       
-      chr = '?' # Charcater
+      chr = '?' # Character
       
       for key in charKey:
         
@@ -824,7 +824,7 @@ def record(pipes, moves, time): # Record high score
     lines.append('  Least Moves: ' + str(moves) + '\n')
     lines.append('  Best Time: ' + str(time) + 's\n')
   
-  else: # Overwrite exsisting with best value
+  else: # Overwrite existing with best value
     
     best = min(pipes, strToPosInt(lines[matchLine + 1]))
     lines[matchLine + 1] = '  Least Pipes: ' + str(best) + '\n'
@@ -933,7 +933,7 @@ try:
         mode = 1 # Mode set to Game
         
         generateGame() # Generates Game
-        updateGrid() # Initail Update
+        updateGrid() # Initial Update
         
         for i in range(renderHeight):
           print('\033[K\033[F', end='') # Clear Row
@@ -988,7 +988,7 @@ try:
       unresolved.pop(0) # Remove pipe
       
     
-    win = True # Initail win state
+    win = True # Initial win state
     
     for drn in drains: # Drains
       
