@@ -2,7 +2,12 @@
 
 Pipe connect game made for Linux terminal, uses Python. To run it: `cd` into the repo folder and run `python ./` or `python3 ./` (run \_\_main\_\_.py). Note: It will need read-write privileges to record.txt in order for the record feature to work (it will log a non-fatal error otherwise).
 
+> Warning: Generating large games may take a lot of possessing and may not generate nicely (generating is not very optimized for unique game values).  
+
+\_\_main\_\_ is a linux executables built with [manylinux2014_x86_64 Docker Image](https://quay.io/repository/pypa/manylinux2014_x86_64).  
+
 ## Screenshots
+
 ### Home Screen
 ![Screenshot 2025-04-23 134641](https://github.com/user-attachments/assets/e6ac81c8-c00d-47ba-a8e3-fee8da091fb4)
 ### Game
