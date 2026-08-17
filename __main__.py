@@ -1,3 +1,15 @@
+# Linux Pipes
+# Copyright (C) 2026 KaliBasenji42
+
+# This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; version 2 of the License.
+
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+# GPL v2: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+# KaliBasenji42's Website: https://kalibasenji.xeroideas.org
+
 ### Imports ###
 
 import sys
@@ -61,6 +73,8 @@ homeScreenBase = [ # What to print when starting home screen
   '\033[31m┏━┓ \033[32m┳ \033[33m┏━┓ \033[34m┏━╸ \033[35m┏━╸',
   '\033[31m┣━┛ \033[32m┃ \033[33m┣━┛ \033[34m┣━╸ \033[35m┗━┓',
   '\033[31m╹   \033[32m┻ \033[33m╹   \033[34m┗━╸ \033[35m╺━┛\033[0m',
+  '',
+  'This is program is licensed under the GPL v2 license.',
   '',
   '"WASD" to navigate',
   '"Q" & "E" to rotate pipes',
